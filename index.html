@@ -6,6 +6,7 @@ Before you get here:
 2. compile_cost.html to get cost.json
 3. combine_quality_cost.html to get combined quality_cost.json
 4. geocode_hospitals.html to get combined_quality_cost_geocoded.json
+
 -->
 <html>
     <head>
@@ -77,8 +78,13 @@ Before you get here:
                     }
                     
                     function placeMarkers() {
-                        for(var i = 0; i < 200; i++) {
+                        for(var i = 0; i < __.hospitals.length; i++) {
                             var h = __.hospitals[i];
+                            
+                            if(!h.hasOwnProperty("outpatient_costs") && !h.hasOwnProperty("total_performance_score")) {
+                                continue;
+                            }
+                            
                             if(h.location.hasOwnProperty("latitude")) {
                                 var lat = parseFloat(h.location.latitude);
                                 var lng = parseFloat(h.location.longitude);
@@ -108,6 +114,10 @@ Before you get here:
                             map: map,
                             title: hospital.hospital_name,
                             hospital: hospital
+                        });
+                        google.maps.event.addListener(marker, 'click', function handleMarkerClick() {
+                            console.log(this.hospital);
+//                            map.setCenter(marker.getPosition());
                         });
                         marker.setMap(map);
                         markers.push(marker);

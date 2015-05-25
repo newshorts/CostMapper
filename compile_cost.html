@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!--
-Converts the outpatient_cost json file to a list of apcs by provider id
+Converts the outpatient_cost_raw json file to a list of apcs by provider id to cost.json
 -->
 <html>
     <head>
@@ -17,9 +17,12 @@ Converts the outpatient_cost json file to a list of apcs by provider id
         <script>
             // takes a "FIELD1" object and converts it to the heading
             function matchKeys(obj) {
+                
+                console.log(obj['FIELD2'].length);
+                
                 var keyed = {
                     apc: obj['FIELD1'],
-                    provider_id: obj['FIELD2'],
+                    provider_id: (obj['FIELD2'].length === 6) ? obj['FIELD2'] : "0" + obj['FIELD2'],
                     provider_name: obj['FIELD3'],
                     provider_street_address: obj['FIELD4'],
                     provider_city: obj['FIELD5'],
@@ -57,6 +60,12 @@ Converts the outpatient_cost json file to a list of apcs by provider id
                         get(url, function(costs) {
                             for(var i = 1; i < costs.length; i++) {
                                 var obj = matchKeys(costs[i]);
+                                
+                                if(obj.provider_id.length < 6) {
+                                    console.log("id less than 6: " + obj.provider_id);
+                                }
+                                
+                                
                                 
                                 var h;
                                 if(hospitals.hasOwnProperty(obj.provider_id)) {
