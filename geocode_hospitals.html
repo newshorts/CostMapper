@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="css/reset.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp&key="></script>
+        <script>
+            function __() {
+                this.hospitals = [];
+            };
+            
+            var map, geocoder, markers = [];
+        </script>
+        <script>
+            (function() {
+                $(window).load(function() {
+                    // helpers
+                    function get(url, callback) {
+                        $.get(url, function(data) {
+                            if(typeof callback === "function") {
+                                callback(JSON.parse(data));
+                            }
+                        });
+                    }
+                    
+                    function output(data) {
+                        $('pre').text(JSON.stringify(data, null, '\t'));
+                    }
+                    
+                    function geocodeHospitals() {
+                        geocoder = new google.maps.Geocoder();
+                        
+                        var count = 0;
+                        function mapHospitals() {
+                            if(count >= __.hospitals.length) {
+                                console.log("done");
+                                output(__.hospitals);
+                                return;
+                            }
+                            
+                            var h = __.hospitals[count];
+                            if(!h.location.hasOwnProperty("latitude")) {
+                                // we need to get it
+                                var addressStr = h.address + ' ' + h.city + ', ' + h.state + ' ' + h.zip_code;
+                                geocoder.geocode( { 'address': addressStr}, function(results, status) {
+                                    if (status == google.maps.GeocoderStatus.OK) {
+                                        h.location.latitude = results[0].geometry.location.lat();
+                                        h.location.longitude = results[0].geometry.location.lng();
+                                    } else {
+                                        console.log('Geocode was not successful for the following reason: ' + status);
+                                    }
+                                });
+                            }
+                            
+                            setTimeout(function() {
+                                console.log('mapping: ' + count);
+                                count++;
+                                mapHospitals();
+                            }, 1500);
+                        }
+                    }
+                    
+                    // actions
+                    get('data/combined_quality_cost.json', function(hospitals) {
+                        __.hospitals = hospitals;
+                        console.log(__.hospitals);
+                        
+                        geocodeHospitals();
+                    });
+                });
+            })(jQuery);
+        </script>
+    </head>
+    <body>
+        <div class="container"><pre></pre></div>
+    </body>
+</html>
