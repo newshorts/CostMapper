@@ -7,24 +7,17 @@ Before you get here:
 3. combine_quality_cost.html to get combined quality_cost.json
 4. geocode_hospitals.html to get combined_quality_cost_geocoded.json
 
+TODO: Just turned off full screen on maps with javascript, need to fix that then convert the page to bootstrap
+
 -->
 <html>
     <head>
         <title>TODO supply a title</title>
         <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" type="text/css" href="css/reset.css" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
         <style>
-            body, html {
-                height: 100%;
-                width: 100%;
-            }
-            
-            .container {
-                position: relative;
-                width: 100%;
-            }
-            
             #map-canvas {
                 width: 100%;
                 height: 100%;
@@ -38,135 +31,37 @@ Before you get here:
             }
             
         </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="map-canvas"></div>
+                </div>
+            </div>
+        </div>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
         <script src="https://google-maps-utility-library-v3.googlecode.com/svn-history/r391/trunk/markerwithlabel/src/markerwithlabel.js"></script>
         <script src="js/markerclusterer.js"></script>
+        <script src="js/main.js"></script>
         <script>
-            function __() {
-                this.hospitals = [];
-            };
-            
-            var map, geocoder, markers = [];
-        </script>
-        <script>
-            (function() {
+            (function($) {
                 $(window).load(function() {
                     
-                    // helpers
-                    function get(url, callback) {
-                        $.get(url, function(data) {
-                            if(typeof callback === "function") {
-                                callback(JSON.parse(data));
-                            }
-                        });
-                    }
+                    console.log(__)
                     
-                    function initMaps() {  
-                        var mapOptions = {
-                            zoom: 5,
-                            center: new google.maps.LatLng(39.8282, -98.5795)
-                        };
-                        map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
-                        geocoder = new google.maps.Geocoder();
-                        
-                        setMapFullScreen();
-                    }
-                    
-                    function setMapFullScreen() {
-                        var w = $(this).width();
-                        var h = $(this).height();
-                        
-                        $('#map-canvas').css({
-                            width: w + 'px',
-                            height: h + 'px'
-                        });
-                        
-                    }
-                    
-                    function placeMarkers(callback) {
-                        for(var i = 0; i < __.hospitals.length; i++) {
-                            var h = __.hospitals[i];
-                            
-                            // filter stuff that has nothing
-                            if(!h.hasOwnProperty("outpatient_costs") && !h.hasOwnProperty("total_performance_score")) {
-                                continue;
-                            }
-                            
-                            if(h.location.hasOwnProperty("latitude")) {
-                                var lat = parseFloat(h.location.latitude);
-                                var lng = parseFloat(h.location.longitude);
-                                var latlng = new google.maps.LatLng(lat, lng);
-                                placeMarker(latlng, h);
-                            }
-                        }
-                        
-                        if(typeof callback === 'function') {
-                            callback();
-                        }
-                    }
-                    
-                    function placeMarker(myLatlng, hospital) {
-                        var image = getMarkerIcon(hospital.total_performance_score);
-                        
-                        var marker = new google.maps.Marker({
-                            position: myLatlng,
-                            map: map,
-                            title: hospital.hospital_name,
-                            hospital: hospital,
-                            icon: image
-                        });
-                        google.maps.event.addListener(marker, 'click', function handleMarkerClick() {
-                            console.log(this.hospital);
-                        });
-                        marker.setMap(map);
-                        markers.push(marker);
-                    }
-                    
-                    function getMarkerIcon(tps) {
-                        var url;
-                        if(typeof tps === 'undefined') {
-                            url = "images/mapicons-70/generic.png";
-                        } else {
-                            url = "images/mapicons-70/" + Math.floor(parseFloat(tps)/10) + ".png";
-                        }
-                        
-                        var image = {
-                            url: url,
-                            size: new google.maps.Size(35,35), // the size it should be on the map
-                            scaledSize: new google.maps.Size(35,35), // the normal size of the image is 90x1100 because Retina asks double size.
-                            origin: new google.maps.Point(0, 0) // position in the sprite   
-                        };
-
-                        return image;
-                    }
-                    
-                    // actions
-                    get('data/combined_quality_cost_geocoded.json', function(hospitals) {
-                        __.hospitals = hospitals;
-                        console.log(__.hospitals);
-                        
-                        initMaps();
-                        placeMarkers(function() {
-                            var mcOptions = {gridSize: 100, maxZoom: 6, imagePath: 'images/mapicons-70/m'};
-                            var markerCluster = new MarkerClusterer(map, markers, mcOptions);
-                            console.log(markerCluster.styles_)
-                        });
-                        console.log(markers);
-                    });
+                    // action 
+                    __.init();
                     
                     // events
                     $(this).on('resize', function() {
-                        setMapFullScreen();
+//                        __.setMapFullScreen();
                     });
                     
                 });
             })(jQuery);
         </script>
-    </head>
-    <body>
-        <div class="container">
-            <div id="map-canvas"></div>
-        </div>
     </body>
 </html>
