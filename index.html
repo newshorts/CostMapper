@@ -31,9 +31,16 @@ Before you get here:
                 margin: 0px;
                 padding: 0px
             }
+            
+            .cluster {
+                background-size: contain;
+                color: white;
+            }
+            
         </style>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+        <script src="https://google-maps-utility-library-v3.googlecode.com/svn-history/r391/trunk/markerwithlabel/src/markerwithlabel.js"></script>
         <script src="js/markerclusterer.js"></script>
         <script>
             function __() {
@@ -77,10 +84,11 @@ Before you get here:
                         
                     }
                     
-                    function placeMarkers() {
+                    function placeMarkers(callback) {
                         for(var i = 0; i < __.hospitals.length; i++) {
                             var h = __.hospitals[i];
                             
+                            // filter stuff that has nothing
                             if(!h.hasOwnProperty("outpatient_costs") && !h.hasOwnProperty("total_performance_score")) {
                                 continue;
                             }
@@ -90,37 +98,47 @@ Before you get here:
                                 var lng = parseFloat(h.location.longitude);
                                 var latlng = new google.maps.LatLng(lat, lng);
                                 placeMarker(latlng, h);
-                            } else {
-                                var addressStr = h.address + ' ' + h.city + ', ' + h.state + ' ' + h.zip_code;
-                                codeAddress(addressStr, h);
                             }
+                        }
+                        
+                        if(typeof callback === 'function') {
+                            callback();
                         }
                     }
                     
-                    function codeAddress(address, hospital) {
-                        geocoder.geocode( { 'address': address}, function(results, status) {
-                            if (status == google.maps.GeocoderStatus.OK) {
-                                placeMarker(results[0].geometry.location, hospital);
-                            } else {
-                                console.log('Geocode was not successful for the following reason: ' + status);
-                            }
-                        });
-                    }
-                    
                     function placeMarker(myLatlng, hospital) {
-//                        var myLatlng = new google.maps.LatLng(-25.363882,131.044922);
+                        var image = getMarkerIcon(hospital.total_performance_score);
+                        
                         var marker = new google.maps.Marker({
                             position: myLatlng,
                             map: map,
                             title: hospital.hospital_name,
-                            hospital: hospital
+                            hospital: hospital,
+                            icon: image
                         });
                         google.maps.event.addListener(marker, 'click', function handleMarkerClick() {
                             console.log(this.hospital);
-//                            map.setCenter(marker.getPosition());
                         });
                         marker.setMap(map);
                         markers.push(marker);
+                    }
+                    
+                    function getMarkerIcon(tps) {
+                        var url;
+                        if(typeof tps === 'undefined') {
+                            url = "images/mapicons-70/generic.png";
+                        } else {
+                            url = "images/mapicons-70/" + Math.floor(parseFloat(tps)/10) + ".png";
+                        }
+                        
+                        var image = {
+                            url: url,
+                            size: new google.maps.Size(35,35), // the size it should be on the map
+                            scaledSize: new google.maps.Size(35,35), // the normal size of the image is 90x1100 because Retina asks double size.
+                            origin: new google.maps.Point(0, 0) // position in the sprite   
+                        };
+
+                        return image;
                     }
                     
                     // actions
@@ -129,10 +147,12 @@ Before you get here:
                         console.log(__.hospitals);
                         
                         initMaps();
-                        placeMarkers();
-                        setTimeout(function() {
-                            var markerCluster = new MarkerClusterer(map, markers);
-                        }, 5000);
+                        placeMarkers(function() {
+                            var mcOptions = {gridSize: 100, maxZoom: 6, imagePath: 'images/mapicons-70/m'};
+                            var markerCluster = new MarkerClusterer(map, markers, mcOptions);
+                            console.log(markerCluster.styles_)
+                        });
+                        console.log(markers);
                     });
                     
                     // events
