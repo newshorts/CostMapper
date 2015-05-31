@@ -1,0 +1,94 @@
+<!DOCTYPE html>  
+<html lang="en">  
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <title><%= title %></title>
+        <meta name="description" content="">
+        <meta name="author" content="">
+
+        <!-- HTML5 shim, for IE6-8 support of HTML elements -->
+        <!--[if lt IE 9]>
+          <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+        <![endif]-->
+
+        <!-- styles -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <style>
+            #map-canvas {
+                width: 100%;
+                min-height: 450px;
+            }
+            
+            nav {
+                height: 100px;
+            }
+            
+            section {
+                position: relative;
+            }
+            
+            .cluster {
+                background-size: contain;
+                color: white;
+            }
+            
+            .overlayContainer {
+                width: 100%;
+                height: 200px;
+                position: absolute;
+                top: 100px;
+                left: 0;
+            }
+            
+            .background {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                top: 0;
+                left: 0;
+                background-color: white;
+                opacity: 0.8;
+                
+            }
+        </style>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+        <script src="https://google-maps-utility-library-v3.googlecode.com/svn-history/r391/trunk/markerwithlabel/src/markerwithlabel.js"></script>
+        <script src="js/markerclusterer.js"></script>
+        <script src="js/main.js"></script>
+        <script>
+            (function($) {
+                $(window).load(function() {
+                    hcm.init();
+                });
+            })(jQuery);
+        </script>
+
+    </head>
+    <body>
+        <div class="container-fluid">
+            <header class="row">
+                <nav class="col-md-12-fluid"></nav>
+            </header>
+            <main class="row">
+                <section class="col-md-12-fluid">
+                    <div class="mapContainer">
+                        <div id="map-canvas"></div>
+                    </div>
+                    <div class="overlayContainer">
+                        <div class="background"></div>
+                        
+                    </div>
+                </section>
+            </main>
+            <footer class="row">
+                
+            </footer>
+        </div> 
+    </body>
+</html>
+
