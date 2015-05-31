@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+
+NOTE: the data contained was too large to output to a browser. I'm writing a nodejs app to get the data and store it locally
+
+add inpatient_cost_raw.json to combined_quality_cost_geocoded.json to get combined_quality_cost_geocoded_inpatient.json
+
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="css/reset.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script>
+            var hospitals = [];
+        </script>
+        <script>
+            (function() {
+                $(window).load(function() {
+                    
+                    var qualityCostGeoURL =  'data/combined_quality_cost_geocoded.json';
+                    var inpatientRawURL = 'data/inpatient_cost_raw.json';
+                    var sCosts = [];
+                    var sPageCount = 0;
+                    
+                    function get(url, callback) {
+                        $.get(url, function(data) {
+                            if(typeof callback === "function") {
+                                callback(JSON.parse(data));
+                            }
+                        });
+                    }
+                    
+                    function addInpatientCostsToHospitals(c) {
+                        console.log(c);
+                    }
+                    
+                    get(qualityCostGeoURL, function(h) {
+                        hospitals = h;
+                        get(inpatientRawURL, function(costs) {
+                            console.log(costs);
+                        });
+                    });
+                });
+            })(jQuery);
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <pre></pre>
+        </div>
+    </body>
+</html>

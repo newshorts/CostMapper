@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+Before you get here:
+
+1. compile_quality.html to get quality.json
+2. compile_cost.html to get cost.json
+3. combine_quality_cost.html to get combined quality_cost.json
+4. geocode_hospitals.html to get combined_quality_cost_geocoded.json
+5. combine combined_quality_cost_geocoded.json with inpatient_cost_raw.json to get combined_quality_cost_geocoded_inpatient.json
+
+
+TODO: Just turned off full screen on maps with javascript, need to fix that then convert the page to bootstrap
+
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <style>
+            #map-canvas {
+                width: 100%;
+                height: 100%;
+                margin: 0px;
+                padding: 0px
+            }
+            
+            .cluster {
+                background-size: contain;
+                color: white;
+            }
+            
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="row">
+                <div class="col-md-12">
+                    <div id="map-canvas"></div>
+                </div>
+            </div>
+        </div>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
+        <script src="https://google-maps-utility-library-v3.googlecode.com/svn-history/r391/trunk/markerwithlabel/src/markerwithlabel.js"></script>
+        <script src="js/markerclusterer.js"></script>
+        <script src="js/main.js"></script>
+        <script>
+            (function($) {
+                $(window).load(function() {
+                    
+                    console.log(__)
+                    
+                    // action 
+                    __.init();
+                    
+                    // events
+                    $(this).on('resize', function() {
+//                        __.setMapFullScreen();
+                    });
+                    
+                });
+            })(jQuery);
+        </script>
+    </body>
+</html>

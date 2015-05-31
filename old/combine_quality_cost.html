@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<!--
+combines quality data with cost data into one nice list of hospitals
+
+takes in quality.json and cost.json and outputs combined_quality_cost.json
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="css/reset.css" />
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script>
+            var hospitals = [];
+        </script>
+        <script>
+            (function() {
+                $(window).load(function() {
+                    
+                    var qualityURL = 'data/quality.json';
+                    var costURL = 'data/cost.json';
+                    
+                    function output(data) {
+                        $('pre').text(JSON.stringify(data, null, '\t'));
+                    }
+                    
+                    function get(url, callback) {
+                        $.get(url, function(data) {
+                            if(typeof callback === "function") {
+                                callback(JSON.parse(data));
+                            }
+                        });
+                    }
+                    
+                    function addCostsToHospitals(costs, callback) {
+                        for(var i = 0; i < hospitals.length; i++) {
+                            if(costs.hasOwnProperty(hospitals[i].provider_id)) {
+                                hospitals[i].outpatient_costs = costs[hospitals[i].provider_id];
+                            }
+                        }
+                        callback();
+                    }
+                    
+                    get(qualityURL, function(h) {
+                        hospitals = h;
+                        get(costURL, function(costs) {
+                            addCostsToHospitals(costs, function() {
+                                console.log("done");
+                                output(hospitals);
+                            });
+                        });
+                    });
+                    
+                });
+            })(jQuery);
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <pre></pre>
+        </div>
+    </body>
+</html>

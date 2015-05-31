@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<!--
+Converts the outpatient_cost_raw json file to a list of apcs by provider id to cost.json
+-->
+<html>
+    <head>
+        <title>TODO supply a title</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" type="text/css" href="css/reset.css" />
+        <style>
+            pre {
+                width: 970px;
+            }
+        </style>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+        <script>
+            // takes a "FIELD1" object and converts it to the heading
+            function matchKeys(obj) {
+                
+                console.log(obj['FIELD2'].length);
+                
+                var keyed = {
+                    apc: obj['FIELD1'],
+                    provider_id: (obj['FIELD2'].length === 6) ? obj['FIELD2'] : "0" + obj['FIELD2'],
+                    provider_name: obj['FIELD3'],
+                    provider_street_address: obj['FIELD4'],
+                    provider_city: obj['FIELD5'],
+                    provider_state: obj['FIELD6'],
+                    provider_zip: obj['FIELD7'],
+                    region: obj['FIELD8'],
+                    outpatient_services: obj['FIELD9'],
+                    avg_submitted_charges: obj['FIELD10'],
+                    avg_total_payments: obj['FIELD11']
+                };
+                
+                return keyed;
+            }
+        </script>
+        <script>
+            var hospitals = {};
+        </script>
+        <script>
+            (function() {
+                $(window).load(function() {
+                    
+                    var outpatientCostURL = 'data/outpatient_cost_raw.json';
+                    
+                    function get(url, callback) {
+                        $.get(url, function(data) {
+                            callback(JSON.parse(data));
+                        });
+                    }
+                    
+                    function output(data) {
+                        $('pre').text(JSON.stringify(data, null, '\t'));
+                    }
+                    
+                    function getOutPatientCosts(url) {
+                        get(url, function(costs) {
+                            for(var i = 1; i < costs.length; i++) {
+                                var obj = matchKeys(costs[i]);
+                                
+                                if(obj.provider_id.length < 6) {
+                                    console.log("id less than 6: " + obj.provider_id);
+                                }
+                                
+                                
+                                
+                                var h;
+                                if(hospitals.hasOwnProperty(obj.provider_id)) {
+                                    // we already have one, so push onto the array
+                                    h = hospitals[obj.provider_id];
+                                } else {
+                                    h = hospitals[obj.provider_id] = [];
+                                }
+                                
+                                var row = {
+                                    apc: obj.apc,
+                                    region: obj.region,
+                                    outpatient_services: obj.outpatient_services,
+                                    avg_submitted_charges: obj.avg_submitted_charges,
+                                    avg_total_payments: obj.avg_total_payments
+                                };
+                                
+                                h.push(row);
+                            }
+                            console.log(hospitals);
+                            
+                            output(hospitals);
+                        });
+                    }
+                    
+                    getOutPatientCosts(outpatientCostURL);
+                    
+                });
+            })(jQuery);
+        </script>
+    </head>
+    <body>
+        <div class="container">
+            <pre></pre>
+        </div>
+    </body>
+</html>
