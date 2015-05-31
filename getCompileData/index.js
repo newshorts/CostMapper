@@ -1,3 +1,17 @@
+/**
+ * 
+ * This app will compile the healthcare data for these sources:
+ * 
+ * https://docs.google.com/spreadsheets/d/1VwkwUSGB0AdjhcmABb6AulUo7CS22TsyfL7XYTuLHb0/edit#gid=0
+ * 
+ * It works by visiting each "get" request, the app will compile a json file with the relevant data
+ * 
+ * The main app will work off the general hospital json file and will call these supporting files with the provider_id.
+ * All the supporting files are indexed according to provider_id, requiring less iteration over data
+ * 
+ * @type type
+ */
+
 var express = require('express');
 var app = express();
 var urlParser = require('url');
@@ -7,7 +21,7 @@ var fs = require('fs');
     
 // globals
 var socrataAppToken = 'mGcIawd37Jx9jP3guva8ugxoO';
-var googleGeoToken = 'AIzaSyB8TUF9fBkzfu9zMxszOL0A7MAXeOqcrnw';
+var googleServerKey = 'AIzaSyDXsG-0hV1RHgsTzsrs_QoPL3_Cc798_U4';
 var retrievalLimit = 50000;
 
 app.set('view engine', 'ejs'); 
@@ -16,29 +30,138 @@ app.use(express.static(__dirname + '/public'));
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 app.get('/', function(req, res) {
-    res.render('index', { title: 'The index page!' });
+    res.render('confirm', { title: 'The index page!' });
 });
 
 app.get('/hospitals', function(req, res) {
     
     // get and render the hospitals.json file
+    var hospitals = [];
     
     // get hospitals
-    // loop and geocode all hospitals
-    // output to a json file
+    getGeneralHospitalInformationSocrata(function(data) {
+        // loop and geocode all hospitals
+        for(var i = 0, len = data.length; i < len; i++) {
+            var entry = padPid(data[i]);
+            hospitals.push(entry);
+        }
+        
+         // save to a file
+        var file = 'data/hospitals.json';
+        fs.writeFile(file, JSON.stringify(hospitals), function(err) {
+            if(err) {
+                res.render('index', { title: 'unsuccessful', status: err });
+                console.log(err);
+            } else {
+                console.log("The file was saved!");
+                res.render('index', { title: 'success', status: 'success' });
+            }
+        });
+    });
+});
+
+// loop the hospitals geo coding ones that do not have a lat/long
+app.get('/geocode', function(req, res) {
+    var hospitals = [];
+    fs.readFile('data/hospitals.json', 'utf8', function (err, data) {
+        if (err) throw err;
+        hospitals = JSON.parse(data);
+        
+        geocodeAll();
+    });
     
-    res.render('index', { title: 'The index page!', status: 'done' });
+    var idx = 0;
+    function geocodeAll() {
+        if(idx >= hospitals.length) {
+            // save to a file
+            var file = 'data/hospitals.json';
+            fs.writeFile(file, JSON.stringify(hospitals), function(err) {
+                if(err) {
+                    res.render('index', { title: 'unsuccessful', status: err });
+                    console.log(err);
+                } else {
+                    console.log("The file was saved!");
+                    res.render('index', { title: 'success', status: 'success' });
+                }
+            });
+            return;
+        }
+        
+        var h = hospitals[idx];
+        
+        if(!h.location.hasOwnProperty('latitude')) {
+            // we need to geocode
+            var addr = h.address + ',+' + h.city + ',+' + h.state + '+' + h.zip_code;
+            geocode(addr, function(geo) {
+                if(geo.hasOwnProperty('lat')) {
+                    h.location.latitude = geo.lat;
+                    h.location.longitude = geo.lng;
+                }
+                
+                // otherwise we just move on
+                setTimeout(function() {
+                    idx++;
+                    geocodeAll();
+                }, Math.random() * 200 + 333);
+            });
+        } else {
+            idx++;
+            geocodeAll();
+        }
+    }
 });
 
 app.get('/quality', function(req, res) {
     
     // get and render the quality.json file
     
-    // get the tps scores
-    // get the patient ratings
-    // loop and render a keyed object with scores according indexed by provider_id
+    var qualities = {};
     
-    res.render('index', { title: 'The index page!', status: 'done' });
+    // get the tps scores
+    getTPSSocrata(function(data) {
+        for(var i = 0, len = data.length; i < len; i++) {
+            var entry = padPid(data[i]);
+            if(qualities.hasOwnProperty(entry.provider_id)) {
+                qualities[entry.provider_id].total_performance_score = entry.total_performance_score;
+            } else {
+                qualities[entry.provider_id] = {
+                    total_performance_score: entry.total_performance_score
+                };
+            }
+        }
+        
+        // let socrata catch up
+        setTimeout(function() {
+            // get the patient ratings
+            getPatientRatingsSocrata(function(data) {
+                for(var i = 0, len = data.length; i < len; i++) {
+                    var entry = padPid(data[i]);
+                    var obj = copyAndRemovePid(entry);
+                    if(qualities.hasOwnProperty(entry.provider_id)) {
+                        qualities[entry.provider_id].patient_rating = obj;
+                    } else {
+                        qualities[entry.provider_id] = {
+                            patient_rating: obj
+                        };
+                    }
+                }    
+
+                // save to a file
+                var file = 'data/quality.json';
+                fs.writeFile(file, JSON.stringify(qualities), function(err) {
+                    if(err) {
+                        res.render('index', { title: 'unsuccessful', status: err });
+                        return console.log(err);
+                    }
+
+                    console.log("The file was saved!");
+                    res.render('index', { title: 'success', status: 'success' });
+                });
+            });
+        }, Math.random() * 500 + 300);
+    });
+    
+    // loop and render a keyed object with scores according indexed by provider_id
 });
 
 app.get('/inpatient', function(req, res) {
@@ -86,20 +209,8 @@ app.get('/outpatient', function(req, res) {
         // loop and re-index by provider_id
         for(var i = 0, len = data.length; i < len; i++) {
             var entry = padPid(data[i]);
-            
-            // pad the provider id
-//            entry.provider_id = pad(entry.provider_id, 6);
-            
-//            var obj = {};
-            var apc_num = pad(parseInt(entry.apc_definition), 4);
-            
-//            for(var name in entry) {
-//                if(name !== 'provider_id') {
-//                    obj[name] = entry[name];
-//                }
-//            }
-            
             var obj = copyAndRemovePid(entry);
+            var apc_num = pad(parseInt(entry.apc_definition), 4);
             
             if(costs.hasOwnProperty(entry.provider_id)) {
                 // then we need to just add
@@ -133,9 +244,10 @@ app.listen(app.get('port'), function() {
 // helpers
 function geocode(addr, callback) {
     var google = 'https://maps.googleapis.com/maps/api/geocode/json';
-    var url = google + '?address='+addr.replace(/ /g, '+')+'&key=' + googleGeoToken;
+    var url = google + '?address='+addr.replace(/ /g, '+')+'&key=' + googleServerKey;
     
     getJSON(url, function(data) {
+        console.log(data);
         if(data.status === 'OK') {
             var latLng = {
                 lat: data.results[0].geometry.location.lat,
@@ -143,7 +255,7 @@ function geocode(addr, callback) {
             };
             callback(latLng);
         } else {
-            callback('Geocode was not successful for the following reason: ' + resp.status);
+            callback('Geocode was not successful for the following reason: ' + data.status);
         }
     });
 }
@@ -156,7 +268,7 @@ function getGeneralHospitalInformationSocrata(callback) {
 function getTPSSocrata(callback) {
     var socrata = 'https://data.medicare.gov/resource/ypbt-wvdk.json';
     var select = '$select=provider_number AS provider_id,';
-        select += 'total_performance_score AS total_performance_score,';
+        select += 'total_performance_score';
     var inpatientURL = socrata + '?' + select;
     
     getSocrata(inpatientURL, callback);
@@ -165,8 +277,9 @@ function getTPSSocrata(callback) {
 function getPatientRatingsSocrata(callback) {
     var socrata = 'https://data.medicare.gov/resource/dgck-syfz.json';
     var filter = 'hcahps_measure_id=H_STAR_RATING';
+    var select = '&$select=number_of_completed_surveys,provider_id,patient_survey_star_rating';
     
-    var prURL = socrata + '?' + filter;
+    var prURL = socrata + '?' + filter + select;
     
     getSocrata(prURL, callback);
     
