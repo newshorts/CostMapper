@@ -61,6 +61,10 @@ var map, geocoder, markers = [];
         }
     };
     
+    HealthCareCostMapper.prototype.handleMarkerClick = function() {
+        console.log(this);
+    };
+    
     // helpers
     function get(url, callback) {
         $.get(url, function(data) {
@@ -81,7 +85,11 @@ var map, geocoder, markers = [];
         };
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         geocoder = new google.maps.Geocoder();
-
+        
+        var w = $(window).width();
+        $('#map-canvas').css({
+            height: w * 0.3 + 'px'
+        });
     }
     
     function placeMarkers(callback) {
@@ -117,9 +125,7 @@ var map, geocoder, markers = [];
             hospital: hospital,
             icon: image
         });
-        google.maps.event.addListener(marker, 'click', function handleMarkerClick() {
-            console.log(this.hospital);
-        });
+        google.maps.event.addListener(marker, 'click', hcm.handleMarkerClick);
         marker.setMap(map);
         markers.push(marker);
     }

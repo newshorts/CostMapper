@@ -15,14 +15,34 @@
         <!-- styles -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <link rel='stylesheet' href="css/progress-bar.css">
         <style>
+            @import url(http://fonts.googleapis.com/css?family=Khula:300,400,700);
+            
+            *, 
+            html, 
+            body {
+                font-family: 'Khula', sans-serif;
+                color: #2c2c2c;
+            }
+            
+            h1 {
+                font-size: 42px;
+                max-width: 768px;
+                margin: 20px auto 10px;
+            }
+            
+            p {
+                font-size: 28px;
+            }
+            
             #map-canvas {
                 width: 100%;
                 min-height: 450px;
             }
             
             nav {
-                height: 100px;
+                height: 20px;
             }
             
             section {
@@ -36,23 +56,16 @@
             
             .overlayContainer {
                 width: 100%;
-                height: 200px;
                 position: absolute;
                 top: 100px;
                 left: 0;
+                padding: 50px;
+                background-color: rgba(255,255,255,0.95);
+                text-align: center;
             }
             
-            .background {
-                width: 100%;
-                height: 100%;
-                position: absolute;
-                top: 0;
-                left: 0;
-                background-color: white;
-                opacity: 0.8;
-                
-            }
         </style>
+        
 
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
@@ -63,7 +76,41 @@
         <script>
             (function($) {
                 $(window).load(function() {
+                    
+                    hcm.handleMarkerClick = function() {
+                        $('.overlayContainer').html('');
+                        $('.overlayContainer').append('<h1>'+this.hospital.hospital_name+'</h1>');
+                        
+                        if(hcm.qualities.hasOwnProperty(this.hospital.provider_id)) {
+                            var perfClass = '';
+                            var num = 0;
+                            if(hcm.qualities[this.hospital.provider_id].hasOwnProperty('total_performance_score')) {
+                                // calculate the class
+                                num = Math.round(parseInt(hcm.qualities[this.hospital.provider_id].total_performance_score) / 10);
+                                perfClass = 'perf-' + num;
+                                var template = '<a href="#"><h2>Total Performance Score</h2></a> \
+                                                <div class="progBarCont"> \
+                                                    <div class="prog '+perfClass+'" style="width: '+(parseInt(hcm.qualities[this.hospital.provider_id].total_performance_score)).toFixed(0)+'%;"> \
+                                                        <div class="progShadow"></div> \
+                                                        <div class="progNum">'+(parseInt(hcm.qualities[this.hospital.provider_id].total_performance_score)).toFixed(0)+'</div> \
+                                                    </div> \
+                                                </div>';
+                                $('.overlayContainer').append(template);
+                            }
+                        }
+                        
+                        $('.overlayContainer').fadeIn('fast', function() {
+                            
+                        });
+                    };
+                    
                     hcm.init();
+                    
+                    $('.overlayContainer').on('click', function() {
+                        $(this).fadeOut('slow', function(evt) {
+                            // done
+                        });
+                    });
                 });
             })(jQuery);
         </script>
@@ -80,8 +127,8 @@
                         <div id="map-canvas"></div>
                     </div>
                     <div class="overlayContainer">
-                        <div class="background"></div>
-                        
+                        <h1>Where's your hospital?</h1>
+                        <p>On this map you'll find hospitals ranked by the government and given a score (Total Performance Score). You can also find what hospitals charge for some of the most common procedures.</p>
                     </div>
                 </section>
             </main>
