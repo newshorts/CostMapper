@@ -17,6 +17,7 @@
  * 5. /inpatient --> inpatient.json
  * 6. /drgAvgs --> drgAvgs.json (depends on inpatient.json)
  * 7. /mdcAvgs --> mdcAvgs.json (depends on outpatient.json)
+ * 8. /compareHospitalCosts --> hospitalsCosts.json (depends on hospitals.json, outpatient.json, inpatient.json, drgAvgs.json, mdcAvgs.json)
  * 
  * @type type
  */
@@ -213,9 +214,9 @@ app.get('/mdcAvgs', function(req, res) {
     });
 });
 
-app.get('/hospitalNatlAvgCosts', function(req, res) {
-    computeHospitalNatlAvgCosts(function(hospitals) {
-        saveFile('data/hospitals.json', hospitals, res);
+app.get('/compareHospitalCosts', function(req, res) {
+    compareHospitalCostsAgainstNatlAvgs(function(hospitalsCosts) {
+        saveFile('data/hospitalsCosts.json', hospitalsCosts, res);
     });
 });
 
@@ -224,8 +225,51 @@ app.listen(app.get('port'), function() {
 });
 
 // helpers
-function computeHospitalNatlAvgCosts(callback) {
+function compareHospitalCostsAgainstNatlAvgs(callback) {
     var hospitals = require('./data/hospitals.json');
+    var inpatient = require('./data/inpatient.json');
+    var outpatient = require('./data/outpatient.json');
+    var drgAvgs = require('./data/drgAvgs.json');
+    var mdcAvgs = require('./data/mdcAvgs.json');
+    
+    var hospitalsCosts = {};
+    
+    for(var i = 0, len = hospitals.length; i < len; i++) {
+        var id = hospitals[i].provider_id;
+        var obj = {};
+        
+        if(inpatient.hasOwnProperty(id)) {
+            var avgInpatientCost = compareHospitalCostAgaintsNatlAvgCost(inpatient[id], drgAvgs, 'covered_charges');
+            obj.avg_inpatient_costs = avgInpatientCost;
+        }
+        
+        if(outpatient.hasOwnProperty(id)) {
+            var avgOutpatientCost = compareHospitalCostAgaintsNatlAvgCost(outpatient[id], mdcAvgs, 'submitted_charges');
+            obj.avg_outpatient_costs = avgOutpatientCost;
+        }
+        
+        hospitalsCosts[id] = obj;
+    }
+    
+    callback(hospitalsCosts);
+}
+
+function compareHospitalCostAgaintsNatlAvgCost(costs, costAvgs, chargeKey) {
+//    var costAvgs = require(filename);
+    var myTotal = 0;
+    var count = 0;
+    
+    for(var key in costs) {
+        if(costAvgs.hasOwnProperty(key)) {
+            var myCost = costs[key][chargeKey];
+            var natlAvgCost = costAvgs[key].avg;
+            var myAvg = (myCost / natlAvgCost);
+            myTotal += myAvg;
+            count++;
+        }
+    }
+    
+    return myTotal / count;
 }
 
 function computeOutpatientAvgs(callback) {
