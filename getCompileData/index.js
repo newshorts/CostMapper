@@ -9,6 +9,15 @@
  * The main app will work off the general hospital json file and will call these supporting files with the provider_id.
  * All the supporting files are indexed according to provider_id, requiring less iteration over data
  * 
+ * Order of Operations:
+ * 1. /hospitals --> hospitals.json
+ * 2. /geocode --> hospitals.json (adds geocodes to any hospitals missing lat/lng which depends on hospitals.json)
+ * 3. /quality --> quality.json
+ * 4. /outpatient --> outpatient.json
+ * 5. /inpatient --> inpatient.json
+ * 6. /drgAvgs --> drgAvgs.json (depends on inpatient.json)
+ * 7. /mdcAvgs --> mdcAvgs.json (depends on outpatient.json)
+ * 
  * @type type
  */
 
@@ -47,16 +56,7 @@ app.get('/hospitals', function(req, res) {
         }
         
          // save to a file
-        var file = 'data/hospitals.json';
-        fs.writeFile(file, JSON.stringify(hospitals), function(err) {
-            if(err) {
-                res.render('index', { title: 'unsuccessful', status: err });
-                console.log(err);
-            } else {
-                console.log("The file was saved!");
-                res.render('index', { title: 'success', status: 'success' });
-            }
-        });
+        saveFile('data/hospitals.json', hospitals, res);
     });
 });
 
@@ -74,16 +74,7 @@ app.get('/geocode', function(req, res) {
     function geocodeAll() {
         if(idx >= hospitals.length) {
             // save to a file
-            var file = 'data/hospitals.json';
-            fs.writeFile(file, JSON.stringify(hospitals), function(err) {
-                if(err) {
-                    res.render('index', { title: 'unsuccessful', status: err });
-                    console.log(err);
-                } else {
-                    console.log("The file was saved!");
-                    res.render('index', { title: 'success', status: 'success' });
-                }
-            });
+            saveFile('data/hospitals.json', hospitals, res);
             return;
         }
         
@@ -147,16 +138,7 @@ app.get('/quality', function(req, res) {
                 }    
 
                 // save to a file
-                var file = 'data/quality.json';
-                fs.writeFile(file, JSON.stringify(qualities), function(err) {
-                    if(err) {
-                        res.render('index', { title: 'unsuccessful', status: err });
-                        return console.log(err);
-                    }
-
-                    console.log("The file was saved!");
-                    res.render('index', { title: 'success', status: 'success' });
-                });
+                saveFile('data/quality.json', qualities, res);
             });
         }, Math.random() * 500 + 300);
     });
@@ -187,16 +169,13 @@ app.get('/inpatient', function(req, res) {
         }
         
         // save to a file
-        var file = 'data/inpatient.json';
-        fs.writeFile(file, JSON.stringify(costs), function(err) {
-            if(err) {
-                res.render('index', { title: 'unsuccessful', status: err });
-                return console.log(err);
-            }
+        saveFile('data/inpatient.json', costs, res);
+    });
+});
 
-            console.log("The file was saved!");
-            res.render('index', { title: 'success', status: 'success' });
-        });
+app.get('/drgAvgs', function (req, res) {
+    computeInpatientAvgs(function(avgs) {
+        saveFile('data/drgAvgs.json', avgs, res);
     });
 });
 
@@ -223,17 +202,20 @@ app.get('/outpatient', function(req, res) {
         }
         
         // save to file
-        var file = 'data/outpatient.json';
-        fs.writeFile(file, JSON.stringify(costs), function(err) {
-            if(err) {
-                res.render('index', { title: 'unsuccessful', status: err });
-                return console.log(err);
-            }
-
-            console.log("The file was saved!");
-            res.render('index', { title: 'success', status: 'success' });
-        });
+        saveFile('data/outpatient.json', costs, res);
        
+    });
+});
+
+app.get('/mdcAvgs', function(req, res) {
+    computeOutpatientAvgs(function(avgs) {
+        saveFile('data/mdcAvgs.json', avgs, res);
+    });
+});
+
+app.get('/hospitalNatlAvgCosts', function(req, res) {
+    computeHospitalNatlAvgCosts(function(hospitals) {
+        saveFile('data/hospitals.json', hospitals, res);
     });
 });
 
@@ -242,6 +224,84 @@ app.listen(app.get('port'), function() {
 });
 
 // helpers
+function computeHospitalNatlAvgCosts(callback) {
+    var hospitals = require('./data/hospitals.json');
+}
+
+function computeOutpatientAvgs(callback) {
+    var mdcs = getClassArr('./data/outpatient.json');
+    var avgs = getAvgs(mdcs, 'submitted_charges');
+    callback(avgs);
+}
+
+function computeInpatientAvgs(callback) {
+    
+    var drgs = getClassArr('./data/inpatient.json');
+    var avgs = getAvgs(drgs, 'covered_charges');
+    callback(avgs);
+    
+}
+
+function getAvgs(arr, key) {
+    var avgs = {};
+    for(var name in arr) {
+        var total = count = highest = 0;
+        var lowest = 99999999;
+        var avgObj = {
+            lowest: 0,
+            highest: 0,
+            avg: 0.0,
+            median: 0
+        };
+
+        for(var i = 0, len = arr[name].length; i < len; i++) {
+            if(arr[name][i].hasOwnProperty(key)) {
+
+                // add to total
+                total += parseFloat(arr[name][i][key]);
+
+                // find the lowest highest
+                if(arr[name][i][key] < lowest) {
+                    lowest = parseFloat(arr[name][i][key]);
+                } else if(arr[name][i][key] > highest) {
+                    highest = parseFloat(arr[name][i][key]);
+                }
+
+                count++;
+
+            }
+        }
+
+        avgObj.lowest = lowest;
+        avgObj.highest = highest;
+        avgObj.avg = (total / count);
+
+        avgs[name] = avgObj;
+    }
+
+    return avgs;
+}
+
+function getClassArr(url) {
+    var hospitals = require(url);
+    var objs = {};
+    
+    for(var id in hospitals) {
+        for(var code in hospitals[id]) {
+            var obj = hospitals[id][code];
+            if(objs.hasOwnProperty(code)) {
+                // we already have one
+                objs[code].push(obj);
+            } else {
+                // create it
+                objs[code] = [obj];
+            }
+        }
+    }
+
+    return objs;
+}
+
 function geocode(addr, callback) {
     var google = 'https://maps.googleapis.com/maps/api/geocode/json';
     var url = google + '?address='+addr.replace(/ /g, '+')+'&key=' + googleServerKey;
@@ -367,16 +427,18 @@ function getJSON(url, callback) {
     req.end();
 }
 
-//function pad(num, size) {
-//    var s = "000000000" + parseInt(num);
-//    return s.substr(s.length-size);
-//}
+function saveFile(filename, content, res) {
+    var file = filename;
+    fs.writeFile(file, JSON.stringify(content), function(err) {
+        if(err) {
+            res.render('index', { title: 'unsuccessful', status: err });
+            return console.log(err);
+        }
 
-//function pad(n, width, z) {
-//    z = z || '0';
-//    n = n + '';
-//    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-//}
+        console.log("The file was saved!");
+        res.render('index', { title: 'success', status: 'success' });
+    });
+}
 
 function copyAndRemovePid(obj) {
     var result = {};
