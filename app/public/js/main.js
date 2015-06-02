@@ -47,8 +47,14 @@ var map, geocoder, markers = [];
             handleAllDataLoaded();
         });
         
+        get('data/hospitalsCosts.json', function(data) {
+            hcm.hospitalsCosts = data;
+            count++;
+            handleAllDataLoaded();
+        });
+        
         function handleAllDataLoaded() {
-            if(count === 4) {
+            if(count === 5) {
                 console.log('all data loaded');
                 console.log(hcm);
                 
