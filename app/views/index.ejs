@@ -74,29 +74,112 @@
         <script src="js/markerclusterer.js"></script>
         <script src="js/main.js"></script>
         <script>
+            var LOWEST_INPATIENT_AVG_COST_RANKING = 0.15;
+            var LOWEST_OUTPATIENT_AVG_COST_RANKING = 0.26;
+            var HIGHEST_INPATIENT_AVG_COST_RANKING = 4.57;
+            var HIGHEST_OUTPATIENT_AVG_COST_RANKING = 7.2;
+        </script>
+        <script>
             (function($) {
                 $(window).load(function() {
                     
                     hcm.handleMarkerClick = function() {
+                        
+                        var pid = this.hospital.provider_id;
+                        
                         $('.overlayContainer').html('');
                         $('.overlayContainer').append('<h1>'+this.hospital.hospital_name+'</h1>');
                         
-                        if(hcm.qualities.hasOwnProperty(this.hospital.provider_id)) {
+                        if(hcm.qualities.hasOwnProperty(pid)) {
                             var perfClass = '';
                             var num = 0;
-                            if(hcm.qualities[this.hospital.provider_id].hasOwnProperty('total_performance_score')) {
+                            if(hcm.qualities[pid].hasOwnProperty('total_performance_score')) {
                                 // calculate the class
-                                num = Math.round(parseInt(hcm.qualities[this.hospital.provider_id].total_performance_score) / 10);
+                                num = Math.round(parseInt(hcm.qualities[pid].total_performance_score) / 10);
                                 perfClass = 'perf-' + num;
                                 var template = '<a href="#"><h2>Total Performance Score</h2></a> \
                                                 <div class="progBarCont"> \
-                                                    <div class="prog '+perfClass+'" style="width: '+(parseInt(hcm.qualities[this.hospital.provider_id].total_performance_score)).toFixed(0)+'%;"> \
+                                                    <div class="prog '+perfClass+'" style="width: '+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'%;"> \
                                                         <div class="progShadow"></div> \
-                                                        <div class="progNum">'+(parseInt(hcm.qualities[this.hospital.provider_id].total_performance_score)).toFixed(0)+'</div> \
+                                                        <div class="progNum">'+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'</div> \
                                                     </div> \
                                                 </div>';
                                 $('.overlayContainer').append(template);
                             }
+                        }
+                        
+                        // test hospitalsCosts
+//                        var count = 0;
+//                        var lowestIn = 999999999;
+//                        var lowestOut = 999999999;
+//                        var highestIn = 0;
+//                        var highestOut = 0;
+//                        for(var name in hcm.hospitalsCosts) {
+//                            if(hcm.hospitalsCosts[name].avg_inpatient_costs < lowestIn) {
+//                                lowestIn = hcm.hospitalsCosts[name].avg_inpatient_costs;
+//                            }
+//                            
+//                            if(hcm.hospitalsCosts[name].avg_inpatient_costs > highestIn) {
+//                                highestIn = hcm.hospitalsCosts[name].avg_inpatient_costs;
+//                            }
+//                            
+//                            if(hcm.hospitalsCosts[name].avg_outpatient_costs < lowestOut) {
+//                                lowestOut = hcm.hospitalsCosts[name].avg_outpatient_costs;
+//                            }
+//                            
+//                            if(hcm.hospitalsCosts[name].avg_outpatient_costs > highestOut) {
+//                                highestOut = hcm.hospitalsCosts[name].avg_outpatient_costs;
+//                            }
+//                            
+//                            count++;
+//                        }
+//                        
+//                        console.log(count);
+//                        console.log('lowestIn' + lowestIn);
+//                        console.log('lowestOut' + lowestOut);
+//                        console.log('highestIn' + highestIn);
+//                        console.log('highestOut' + highestOut);
+                        
+                        // end test
+                        
+                        
+                        
+                        
+                        
+//                        var inpatientScale = 0.884;
+//                        var outpatientScale = 1.388;
+                        
+                        // TODO: remove the outliers on the average costs globals, to make the average closer to 3 stars instead of 1
+                        // oldRange = (oldMax - oldMin)
+                        // newRange = (newMax - newMin)
+                        // newValue = (((oldValue - oldMin) * newRange) / oldRange) + newMin
+                        if(hcm.hospitalsCosts.hasOwnProperty(pid)) {
+                            var c = hcm.hospitalsCosts[pid];
+                            
+                            if(c.hasOwnProperty('avg_inpatient_costs')) {
+                                var oldMin = LOWEST_INPATIENT_AVG_COST_RANKING;
+                                var oldMax = HIGHEST_INPATIENT_AVG_COST_RANKING;
+                                var newMax = 5;
+                                var newMin = 1;
+                                var oldRange = (oldMax - oldMin);
+                                var newRange = (newMax - newMin);
+                                var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
+                                console.log("weighted inpatient costs on a scale of 1-5: " + newValue);
+                            }
+                            
+                            if(c.hasOwnProperty('avg_outpatient_costs')) {
+                                var oldMin = LOWEST_OUTPATIENT_AVG_COST_RANKING;
+                                var oldMax = HIGHEST_OUTPATIENT_AVG_COST_RANKING;
+                                var newMax = 5;
+                                var newMin = 1;
+                                var oldRange = (oldMax - oldMin);
+                                var newRange = (newMax - newMin);
+                                var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
+                                console.log("weighted outpatient costs on a scale of 1-5: " + newValue);
+                            }
+                            
+                            
+                            console.log(c);
                         }
                         
                         $('.overlayContainer').fadeIn('fast', function() {
