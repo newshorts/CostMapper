@@ -15,9 +15,15 @@
  * 3. /quality --> quality.json
  * 4. /outpatient --> outpatient.json
  * 5. /inpatient --> inpatient.json
- * 6. /drgAvgs --> drgAvgs.json (depends on inpatient.json)
- * 7. /mdcAvgs --> mdcAvgs.json (depends on outpatient.json)
+ * 6. /drgAvgs --> drgAvgs.json (depends on inpatient.json) (computes the national average for a specific drg)
+ * 7. /mdcAvgs --> mdcAvgs.json (depends on outpatient.json) (computes the national average for a specific mdc)
  * 8. /compareHospitalCosts --> hospitalsCosts.json (depends on hospitals.json, outpatient.json, inpatient.json, drgAvgs.json, mdcAvgs.json)
+ * 
+ * 
+ * Output Data sets in different variations
+ * /getInpatientAvgCost --> inpatientAvgCost.json (outputs a list of inpatient average cost per hospital)
+ * /getOutpatientAvgCost --> outpatientAvgCost.json (outputs a list of outpatient average cost per hospital)
+ * 
  * 
  * @type type
  */
@@ -220,11 +226,36 @@ app.get('/compareHospitalCosts', function(req, res) {
     });
 });
 
+app.get('/getInpatientAvgCost', function (req, res) {
+    outputAvgCostList(function(list) {
+        saveFile('data/inpatientAvgCost.json', list, res);
+    }, 'avg_inpatient_costs');
+});
+
+app.get('/getOutpatientAvgCost', function (req, res) {
+    outputAvgCostList(function(list) {
+        saveFile('data/outpatientAvgCost.json', list, res);
+    }, 'avg_outpatient_costs');
+});
+
 app.listen(app.get('port'), function() {
     console.log("Node app is running at localhost:" + app.get('port'));
 });
 
 // helpers
+function outputAvgCostList(callback, attrName) {
+    var costs = require('./data/hospitalsCosts.json');
+    var list = [];
+    
+    for(var key in costs) {
+        if(costs[key].hasOwnProperty(attrName)) {
+            list.push(costs[key][attrName]);
+        }
+    }
+    
+    callback(list);
+}
+
 function compareHospitalCostsAgainstNatlAvgs(callback) {
     var hospitals = require('./data/hospitals.json');
     var inpatient = require('./data/inpatient.json');

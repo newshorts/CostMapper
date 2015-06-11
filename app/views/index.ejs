@@ -74,10 +74,19 @@
         <script src="js/markerclusterer.js"></script>
         <script src="js/main.js"></script>
         <script>
-            var LOWEST_INPATIENT_AVG_COST_RANKING = 0.15;
-            var LOWEST_OUTPATIENT_AVG_COST_RANKING = 0.26;
-            var HIGHEST_INPATIENT_AVG_COST_RANKING = 4.57;
-            var HIGHEST_OUTPATIENT_AVG_COST_RANKING = 7.2;
+//            var LOWEST_INPATIENT_AVG_COST_RANKING = 0.15;
+//            var LOWEST_OUTPATIENT_AVG_COST_RANKING = 0.26;
+//            var HIGHEST_INPATIENT_AVG_COST_RANKING = 4.57;
+//            var HIGHEST_OUTPATIENT_AVG_COST_RANKING = 7.2;
+            
+            // look at the spreadsheet to get the numbers for this
+            // These numbers we calculated by getting the first standard deviation of hospital cost averages (65% or more of the hospitals)
+            var LOW_INPATIENT_STDEV = 0.43;
+            var HIGH_INPATIENT_STDEV = 1.41;
+            var LOW_OUTPATIENT_STDEV = 0.54;
+            var HIGH_OUTPATIENT_STDEV = 1.51;
+            
+            
         </script>
         <script>
             (function($) {
@@ -157,29 +166,52 @@
                             var c = hcm.hospitalsCosts[pid];
                             
                             if(c.hasOwnProperty('avg_inpatient_costs')) {
-                                var oldMin = LOWEST_INPATIENT_AVG_COST_RANKING;
-                                var oldMax = HIGHEST_INPATIENT_AVG_COST_RANKING;
-                                var newMax = 5;
-                                var newMin = 1;
-                                var oldRange = (oldMax - oldMin);
-                                var newRange = (newMax - newMin);
-                                var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
-                                console.log("weighted inpatient costs on a scale of 1-5: " + newValue);
+                                
+                                console.log('inpatient avg cost: ' + c.avg_inpatient_costs);
+                                
+                                
+                                if(c.avg_inpatient_costs < LOW_INPATIENT_STDEV) {
+                                    // one star
+                                    console.log('inpatient: 1 dollar sign')
+                                } else if(c.avg_inpatient_costs > HIGH_INPATIENT_STDEV) {
+                                    // 5 stars
+                                    console.log('inpatient: 5 dollar sign')
+                                } else {
+                                    var oldMin = LOW_INPATIENT_STDEV;
+                                    var oldMax = HIGH_INPATIENT_STDEV;
+                                    var newMax = 5;
+                                    var newMin = 1;
+                                    var oldRange = (oldMax - oldMin);
+                                    var newRange = (newMax - newMin);
+                                    var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
+                                    console.log("weighted inpatient costs on a scale of 1-5: " + Math.round(newValue) + ' dollar sign');
+                                }
                             }
                             
                             if(c.hasOwnProperty('avg_outpatient_costs')) {
-                                var oldMin = LOWEST_OUTPATIENT_AVG_COST_RANKING;
-                                var oldMax = HIGHEST_OUTPATIENT_AVG_COST_RANKING;
-                                var newMax = 5;
-                                var newMin = 1;
-                                var oldRange = (oldMax - oldMin);
-                                var newRange = (newMax - newMin);
-                                var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
-                                console.log("weighted outpatient costs on a scale of 1-5: " + newValue);
+                                
+                                console.log('outpatient avg cost: ' + c.avg_outpatient_costs);
+                                
+                                if(c.avg_outpatient_costs < LOW_OUTPATIENT_STDEV) {
+                                    console.log('1 dollar sign for outpatient costs');
+                                } else if (c.avg_outpatient_costs > HIGH_OUTPATIENT_STDEV) {
+                                    console.log('5 dollar sign for outpatient costs');
+                                } else {
+                                    var oldMin = LOW_OUTPATIENT_STDEV;
+                                    var oldMax = HIGH_OUTPATIENT_STDEV;
+                                    var newMax = 5;
+                                    var newMin = 1;
+                                    var oldRange = (oldMax - oldMin);
+                                    var newRange = (newMax - newMin);
+                                    var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
+                                    console.log("weighted outpatient costs on a scale of 1-5: " + Math.round(newValue) + ' dollar sign');
+                                }
+                                
+                                    
                             }
                             
                             
-                            console.log(c);
+//                            console.log(c);
                         }
                         
                         $('.overlayContainer').fadeIn('fast', function() {
