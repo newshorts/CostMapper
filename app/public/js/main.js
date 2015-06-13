@@ -6,9 +6,11 @@
 
 function HealthCareCostMapper() {
     this.hospitals = [];
-    this.qualities = [];
-    this.inpatientCosts = [];
-    this.outpatientCosts = [];
+    this.hospitalsCosts = {};
+    this.qualities = {};
+    this.inpatientCosts = {};
+    this.outpatientCosts = {};
+    
 };
 
 var hcm = new HealthCareCostMapper();
@@ -68,7 +70,93 @@ var map, geocoder, markers = [];
     };
     
     HealthCareCostMapper.prototype.handleMarkerClick = function() {
-        console.log(this);
+        
+        var pid = this.hospital.provider_id;
+                        
+        $('.overlayContainer').html('');
+        $('.overlayContainer').append('<h1>'+this.hospital.hospital_name+'</h1>');
+        $('.overlayContainer').append('<a href="#"><h2>Total Performance Score</h2></a>');
+        
+        // quality
+        var template = '-- NO SCORE AVAILABLE --';
+        var patientRatingTemplate = '-- NO RATINGS --';
+        
+        if(hcm.qualities.hasOwnProperty(pid)) {
+            var perfClass = '';
+            var num = 0;
+            if(hcm.qualities[pid].hasOwnProperty('total_performance_score')) {
+                // calculate the class
+                num = Math.round(parseInt(hcm.qualities[pid].total_performance_score) / 10);
+                perfClass = 'perf-' + num;
+                template = '<div class="progBarCont"> \
+                                    <div class="prog '+perfClass+'" style="width: '+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'%;"> \
+                                        <div class="progShadow"></div> \
+                                        <div class="progNum">'+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'</div> \
+                                    </div> \
+                                </div>';
+            }
+            
+            if(hcm.qualities[pid].hasOwnProperty('patient_rating')) {
+                if(hcm.qualities[pid].patient_rating.hasOwnProperty('patient_survey_star_rating')) {
+                    var rating = parseInt(hcm.qualities[pid].patient_rating.patient_survey_star_rating);
+                    if(!isNaN(rating)) {
+                        patientRatingTemplate = '<span class="stars">';
+                        console.log(rating)
+                        for(var i = 1; i <= 5; i++) {
+                            var className = '';
+                            if(i > rating) {
+                                className = 'greyStar';
+                            }
+                            patientRatingTemplate += '<img class="'+className+'" src="images/mapicons-70/star.svg" />';
+                        }
+
+                        // set up the survey star rating
+                        patientRatingTemplate += '</span>';
+                    }
+                }
+            }
+        }
+        $('.overlayContainer').append(template);
+        
+        // cost
+        var inpatientDollars = '-- NO DATA --';
+        var outpatientDollars = '-- NO DATA --';
+
+        if(hcm.hospitalsCosts.hasOwnProperty(pid)) {
+            var c = hcm.hospitalsCosts[pid];
+            
+            if(c.hasOwnProperty('avg_inpatient_costs')) {
+                var ids = getDollarSign(c.avg_inpatient_costs, HIGH_INPATIENT_STDEV, LOW_INPATIENT_STDEV);
+                inpatientDollars = '<span class="dollarSign">'+ getDollarString(ids)+'</span>';
+            }
+            
+            if(c.hasOwnProperty('avg_outpatient_costs')) {
+                var ods = getDollarSign(c.avg_outpatient_costs, HIGH_OUTPATIENT_STDEV, LOW_OUTPATIENT_STDEV);
+                outpatientDollars = '<span class="dollarSign">'+getDollarString(ods)+'</span>';
+            }
+        }
+        
+        // template
+        var costTemplate =  '<div class="row dollar"> \
+                                <div class="col-md-4"> \
+                                    <h2>Inpatient Cost</h2> \
+                                    '+inpatientDollars+' \
+                                </div> \
+                                <div class="col-md-4"> \
+                                    <h2>Outpatient Cost</h2> \
+                                    '+outpatientDollars+' \
+                                </div> \
+                                <div class="col-md-4"> \
+                                    <h2>Patient Rating</h2> \
+                                    '+patientRatingTemplate+' \
+                                </div> \
+                            </div>';
+
+        $('.overlayContainer').append(costTemplate);
+
+        $('.overlayContainer').fadeIn('fast', function() {
+            // done
+        });
     };
     
     // helpers
@@ -153,4 +241,6 @@ var map, geocoder, markers = [];
 
         return image;
     }
+    
+    
 })(jQuery);

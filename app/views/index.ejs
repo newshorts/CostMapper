@@ -16,6 +16,7 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
         <link rel='stylesheet' href="css/progress-bar.css">
+        <link rel='stylesheet' href="css/dollars-stars.css">
         <style>
             @import url(http://fonts.googleapis.com/css?family=Khula:300,400,700);
             
@@ -72,160 +73,39 @@
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
         <script src="https://google-maps-utility-library-v3.googlecode.com/svn-history/r391/trunk/markerwithlabel/src/markerwithlabel.js"></script>
         <script src="js/markerclusterer.js"></script>
+        <script src="js/dollar.js"></script>
         <script src="js/main.js"></script>
         <script>
-//            var LOWEST_INPATIENT_AVG_COST_RANKING = 0.15;
-//            var LOWEST_OUTPATIENT_AVG_COST_RANKING = 0.26;
-//            var HIGHEST_INPATIENT_AVG_COST_RANKING = 4.57;
-//            var HIGHEST_OUTPATIENT_AVG_COST_RANKING = 7.2;
-            
             // look at the spreadsheet to get the numbers for this
             // These numbers we calculated by getting the first standard deviation of hospital cost averages (65% or more of the hospitals)
             var LOW_INPATIENT_STDEV = 0.43;
             var HIGH_INPATIENT_STDEV = 1.41;
             var LOW_OUTPATIENT_STDEV = 0.54;
-            var HIGH_OUTPATIENT_STDEV = 1.51;
-            
-            
+            var HIGH_OUTPATIENT_STDEV = 1.51;            
         </script>
         <script>
             (function($) {
                 $(window).load(function() {
                     
-                    hcm.handleMarkerClick = function() {
-                        
-                        var pid = this.hospital.provider_id;
-                        
-                        $('.overlayContainer').html('');
-                        $('.overlayContainer').append('<h1>'+this.hospital.hospital_name+'</h1>');
-                        
-                        if(hcm.qualities.hasOwnProperty(pid)) {
-                            var perfClass = '';
-                            var num = 0;
-                            if(hcm.qualities[pid].hasOwnProperty('total_performance_score')) {
-                                // calculate the class
-                                num = Math.round(parseInt(hcm.qualities[pid].total_performance_score) / 10);
-                                perfClass = 'perf-' + num;
-                                var template = '<a href="#"><h2>Total Performance Score</h2></a> \
-                                                <div class="progBarCont"> \
-                                                    <div class="prog '+perfClass+'" style="width: '+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'%;"> \
-                                                        <div class="progShadow"></div> \
-                                                        <div class="progNum">'+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'</div> \
-                                                    </div> \
-                                                </div>';
-                                $('.overlayContainer').append(template);
-                            }
-                        }
-                        
-                        // test hospitalsCosts
-//                        var count = 0;
-//                        var lowestIn = 999999999;
-//                        var lowestOut = 999999999;
-//                        var highestIn = 0;
-//                        var highestOut = 0;
-//                        for(var name in hcm.hospitalsCosts) {
-//                            if(hcm.hospitalsCosts[name].avg_inpatient_costs < lowestIn) {
-//                                lowestIn = hcm.hospitalsCosts[name].avg_inpatient_costs;
-//                            }
-//                            
-//                            if(hcm.hospitalsCosts[name].avg_inpatient_costs > highestIn) {
-//                                highestIn = hcm.hospitalsCosts[name].avg_inpatient_costs;
-//                            }
-//                            
-//                            if(hcm.hospitalsCosts[name].avg_outpatient_costs < lowestOut) {
-//                                lowestOut = hcm.hospitalsCosts[name].avg_outpatient_costs;
-//                            }
-//                            
-//                            if(hcm.hospitalsCosts[name].avg_outpatient_costs > highestOut) {
-//                                highestOut = hcm.hospitalsCosts[name].avg_outpatient_costs;
-//                            }
-//                            
-//                            count++;
-//                        }
-//                        
-//                        console.log(count);
-//                        console.log('lowestIn' + lowestIn);
-//                        console.log('lowestOut' + lowestOut);
-//                        console.log('highestIn' + highestIn);
-//                        console.log('highestOut' + highestOut);
-                        
-                        // end test
-                        
-                        
-                        
-                        
-                        
-//                        var inpatientScale = 0.884;
-//                        var outpatientScale = 1.388;
-                        
-                        // TODO: remove the outliers on the average costs globals, to make the average closer to 3 stars instead of 1
-                        // oldRange = (oldMax - oldMin)
-                        // newRange = (newMax - newMin)
-                        // newValue = (((oldValue - oldMin) * newRange) / oldRange) + newMin
-                        if(hcm.hospitalsCosts.hasOwnProperty(pid)) {
-                            var c = hcm.hospitalsCosts[pid];
-                            
-                            if(c.hasOwnProperty('avg_inpatient_costs')) {
-                                
-                                console.log('inpatient avg cost: ' + c.avg_inpatient_costs);
-                                
-                                
-                                if(c.avg_inpatient_costs < LOW_INPATIENT_STDEV) {
-                                    // one star
-                                    console.log('inpatient: 1 dollar sign')
-                                } else if(c.avg_inpatient_costs > HIGH_INPATIENT_STDEV) {
-                                    // 5 stars
-                                    console.log('inpatient: 5 dollar sign')
-                                } else {
-                                    var oldMin = LOW_INPATIENT_STDEV;
-                                    var oldMax = HIGH_INPATIENT_STDEV;
-                                    var newMax = 5;
-                                    var newMin = 1;
-                                    var oldRange = (oldMax - oldMin);
-                                    var newRange = (newMax - newMin);
-                                    var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
-                                    console.log("weighted inpatient costs on a scale of 1-5: " + Math.round(newValue) + ' dollar sign');
-                                }
-                            }
-                            
-                            if(c.hasOwnProperty('avg_outpatient_costs')) {
-                                
-                                console.log('outpatient avg cost: ' + c.avg_outpatient_costs);
-                                
-                                if(c.avg_outpatient_costs < LOW_OUTPATIENT_STDEV) {
-                                    console.log('1 dollar sign for outpatient costs');
-                                } else if (c.avg_outpatient_costs > HIGH_OUTPATIENT_STDEV) {
-                                    console.log('5 dollar sign for outpatient costs');
-                                } else {
-                                    var oldMin = LOW_OUTPATIENT_STDEV;
-                                    var oldMax = HIGH_OUTPATIENT_STDEV;
-                                    var newMax = 5;
-                                    var newMin = 1;
-                                    var oldRange = (oldMax - oldMin);
-                                    var newRange = (newMax - newMin);
-                                    var newValue = (((parseFloat(c.avg_inpatient_costs) - oldMin) * newRange) / oldRange) + newMin;
-                                    console.log("weighted outpatient costs on a scale of 1-5: " + Math.round(newValue) + ' dollar sign');
-                                }
-                                
-                                    
-                            }
-                            
-                            
-//                            console.log(c);
-                        }
-                        
-                        $('.overlayContainer').fadeIn('fast', function() {
-                            
-                        });
-                    };
-                    
                     hcm.init();
                     
-                    $('.overlayContainer').on('click', function() {
+                    // events
+                    $('.overlayContainer').on('click', function(evt) {
+                        evt.preventDefault();
                         $(this).fadeOut('slow', function(evt) {
                             // done
                         });
                     });
+                    
+//                    $('.mapContainer').on('click', function(evt) {
+//                        evt.preventDefault();
+//                        if(hcm.overlayShowing && !hcm.markerClicked) {
+//                            $('.overlayContainer').fadeOut('slow', function(evt) {
+//                                // done
+//                                hcm.overlayShowing = false;
+//                            });
+//                        }
+//                    });
                 });
             })(jQuery);
         </script>
@@ -242,8 +122,8 @@
                         <div id="map-canvas"></div>
                     </div>
                     <div class="overlayContainer">
-                        <h1>How's Your Hospital?</h1>
-                        <p>Here you'll find hospitals ranked by the government and given a <a href="#">Total Performance Score</a>. You can also find what hospitals charge for some of the most common procedures.</p>
+                        <h1>How does your hospital compare?</h1>
+                        <p>Here you'll find national hospital rankings and what they charge for the most common procedures.<br />See how your hospital stacks up.</p>
                     </div>
                 </section>
             </main>
