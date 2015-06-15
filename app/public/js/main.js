@@ -10,7 +10,6 @@ function HealthCareCostMapper() {
     this.qualities = {};
     this.inpatientCosts = {};
     this.outpatientCosts = {};
-    
 };
 
 var hcm = new HealthCareCostMapper();
@@ -72,10 +71,12 @@ var map, geocoder, markers = [];
     HealthCareCostMapper.prototype.handleMarkerClick = function() {
         
         var pid = this.hospital.provider_id;
+        
+        var oc = $('.overlayContainer');
                         
-        $('.overlayContainer').html('');
-        $('.overlayContainer').append('<h1>'+this.hospital.hospital_name+'</h1>');
-        $('.overlayContainer').append('<a href="#"><h2>Total Performance Score</h2></a>');
+        oc.html('');
+        oc.append('<h1>'+this.hospital.hospital_name+'</h1>');
+        oc.append('<a href="#"><h2>Total Performance Score</h2></a>');
         
         // quality
         var template = '-- NO SCORE AVAILABLE --';
@@ -101,7 +102,6 @@ var map, geocoder, markers = [];
                     var rating = parseInt(hcm.qualities[pid].patient_rating.patient_survey_star_rating);
                     if(!isNaN(rating)) {
                         patientRatingTemplate = '<span class="stars">';
-                        console.log(rating)
                         for(var i = 1; i <= 5; i++) {
                             var className = '';
                             if(i > rating) {
@@ -116,7 +116,7 @@ var map, geocoder, markers = [];
                 }
             }
         }
-        $('.overlayContainer').append(template);
+        oc.append(template);
         
         // cost
         var inpatientDollars = '-- NO DATA --';
@@ -136,14 +136,13 @@ var map, geocoder, markers = [];
             }
         }
         
-        // template
         var costTemplate =  '<div class="row dollar"> \
                                 <div class="col-md-4"> \
-                                    <h2>Inpatient Cost</h2> \
+                                    <h2>Overall Inpatient Cost</h2> \
                                     '+inpatientDollars+' \
                                 </div> \
                                 <div class="col-md-4"> \
-                                    <h2>Outpatient Cost</h2> \
+                                    <h2>Overall Outpatient Cost</h2> \
                                     '+outpatientDollars+' \
                                 </div> \
                                 <div class="col-md-4"> \
@@ -152,11 +151,92 @@ var map, geocoder, markers = [];
                                 </div> \
                             </div>';
 
-        $('.overlayContainer').append(costTemplate);
+        oc.append(costTemplate);
+        
+        // cost charts
+        console.log('hospital inpatient costs')
+        console.log(hcm.inpatientCosts[pid]);
+        
+        if(hcm.inpatientCosts.hasOwnProperty(pid)) {
+            var drgs = hcm.inpatientCosts[pid];
+            var charges = '';
+            for(var key in drgs) {
+                var def = drgs[key].drg_definition;
+                var charge = drgs[key].covered_charges;
+                
+                var tr =    '<tr> \
+                                <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace(' W MCC', '').replace(' W/O MCC', '').replace(' W CC', '').replace('- ', '')+'</td> \
+                                <td>$'+parseFloat(charge).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'</td> \
+                            </tr>';
+                
+                charges += tr;
+            }
 
-        $('.overlayContainer').fadeIn('fast', function() {
-            // done
-        });
+            var costChart = '<h2>Average Inpatient Charges</h2> \
+                            <div class="row charges"> \
+                                <div class="col-md-2"></div> \
+                                <div class="col-md-8"> \
+                                    <table class="table table-striped"> \
+                                        <thead> \
+                                            <tr> \
+                                                <th>Procedure</th> \
+                                                <th>Average Covered Charges (Medicare)</th> \
+                                            </tr> \
+                                        </thead> \
+                                        <tbody> \
+                                            '+charges+' \
+                                        </tbody> \
+                                    </table> \
+                                </div> \
+                                <div class="col-md-2"></div> \
+                            </div>';
+            
+            oc.append(costChart);
+        }
+        
+        if(hcm.outpatientCosts.hasOwnProperty(pid)) {
+            var mdcs = hcm.outpatientCosts[pid];
+            console.log(mdcs)
+            var charges = '';
+            for(var key in mdcs) {
+                var def = mdcs[key].apc_definition;
+                var charge = mdcs[key].submitted_charges;
+                
+                var tr =    '<tr> \
+                                <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace('- ', '')+'</td> \
+                                <td>$'+parseFloat(charge).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'</td> \
+                            </tr>';
+                charges += tr;
+            }
+
+            var costChart = '<h2>Average Outpatient Charges</h2> \
+                            <div class="row charges"> \
+                                <div class="col-md-2"></div> \
+                                <div class="col-md-8"> \
+                                    <table class="table table-striped"> \
+                                        <thead> \
+                                            <tr> \
+                                                <th>Procedure</th> \
+                                                <th>Average Estimated Submitted Charges (Medicare)</th> \
+                                            </tr> \
+                                        </thead> \
+                                        <tbody> \
+                                            '+charges+' \
+                                        </tbody> \
+                                    </table> \
+                                </div> \
+                                <div class="col-md-2"></div> \
+                            </div>';
+            
+            oc.append(costChart);
+        }
+        
+        
+//        TweenLite.to(oc, 0.75, {
+//            top: 300,
+//            ease: Bounce.easeOut
+//        });
+
     };
     
     // helpers
