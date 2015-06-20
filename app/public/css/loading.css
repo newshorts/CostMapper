@@ -1,0 +1,109 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jun 20, 2014, 2:56:13 PM
+    Author     : mike_newell
+*/
+
+.loadingContainer, 
+.loadingBackgroundLayer,
+.loadingContentLayer {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+.loadingBackgroundLayer {
+    background-color: black;
+    opacity: 0.7;
+}
+
+.loadingContentLayer {
+    margin-top: 100px;
+    font-size: 36px;
+    font-weight: 100;
+    text-align: center;
+}
+
+.loadingContainer span {
+    display: block; 
+    margin: 0 auto;
+    color: white;
+}
+
+.loadingContainer span[class*="l"] {
+	height: 5px; 
+        width: 5px;
+	background: white;
+	display: inline-block;
+	margin: 12px 2px;
+	
+	border-radius: 100%;
+	-webkit-border-radius: 100%;
+	-moz-border-radius: 100%;
+	
+	-webkit-animation: loader 3s infinite;
+	-webkit-animation-timing-function: cubic-bezier(0.030, 0.615, 0.995, 0.415);
+	-webkit-animation-fill-mode: both;
+	-moz-animation: loader 3s infinite;
+	-moz-animation-timing-function: cubic-bezier(0.030, 0.615, 0.995, 0.415);
+	-moz-animation-fill-mode: both;
+	-ms-animation: loader 3s infinite;
+	-ms-animation-timing-function: cubic-bezier(0.030, 0.615, 0.995, 0.415);
+	-ms-animation-fill-mode: both;
+	animation: loader 3s infinite;
+	animation-timing-function: cubic-bezier(0.030, 0.615, 0.995, 0.415);
+	animation-fill-mode: both;
+}
+
+.loadingContainer span.l1 { -webkit-animation-delay: 1s; animation-delay: 1s; -ms-animation-delay: 1s; -moz-animation-delay: 1s; }
+.loadingContainer span.l2 { -webkit-animation-delay: 0.8s; animation-delay: 0.8s; -ms-animation-delay: 0.8s; -moz-animation-delay: 0.8s; }
+.loadingContainer span.l3 { -webkit-animation-delay: 0.6s; animation-delay: 0.6s; -ms-animation-delay: 0.6s; -moz-animation-delay: 0.6s; }
+.loadingContainer span.l4 { -webkit-animation-delay: 0.4s; animation-delay: 0.4s; -ms-animation-delay: 0.4s; -moz-animation-delay: 0.4s; }
+.loadingContainer span.l5 { -webkit-animation-delay: 0.2s; animation-delay: 0.2s; -ms-animation-delay: 0.2s; -moz-animation-delay: 0.2s; }
+.loadingContainer span.l6 { -webkit-animation-delay: 0; animation-delay: 0; -ms-animation-delay: 0; -moz-animation-delay: 0; }
+
+@media only screen and (max-height: 350px) {
+    .loadingContentLayer {
+        margin-top: 0px;
+    }
+}
+
+@media only screen and (max-height: 550px) {
+    .loadingContentLayer {
+        margin-top: 50px;
+    }
+}
+
+@-webkit-keyframes loader {
+	0% {-webkit-transform: translateX(-30px); opacity: 0;}
+	25% {opacity: 1;}
+	50% {-webkit-transform: translateX(30px); opacity: 0;}
+	100% {opacity: 0;}
+}
+
+@-moz-keyframes loader {
+	0% {-moz-transform: translateX(-30px); opacity: 0;}
+	25% {opacity: 1;}
+	50% {-moz-transform: translateX(30px); opacity: 0;}
+	100% {opacity: 0;}
+}
+
+@-keyframes loader {
+	0% {-transform: translateX(-30px); opacity: 0;}
+	25% {opacity: 1;}
+	50% {-transform: translateX(30px); opacity: 0;}
+	100% {opacity: 0;}
+}
+
+@-ms-keyframes loader {
+	0% {-ms-transform: translateX(-30px); opacity: 0;}
+	25% {opacity: 1;}
+	50% {-ms-transform: translateX(30px); opacity: 0;}
+	100% {opacity: 0;}
+}

@@ -18,7 +18,7 @@ var map, geocoder, markers = [];
 
 (function($) {
     
-    HealthCareCostMapper.prototype.init = function() {
+    HealthCareCostMapper.prototype.init = function(callback) {
         initMaps();
         
         var count = 0;
@@ -63,6 +63,10 @@ var map, geocoder, markers = [];
                 placeMarkers(function() {
                     var mcOptions = {gridSize: 100, maxZoom: 6, imagePath: 'images/mapicons-70/m'};
                     var markerCluster = new MarkerClusterer(map, markers, mcOptions);
+                    // callback
+                    if(typeof callback != 'undefined') {
+                        callback();
+                    }
                 });
             }
         }
@@ -78,165 +82,32 @@ var map, geocoder, markers = [];
         oc.append('<h1>'+this.hospital.hospital_name+'</h1>');
         oc.append('<a href="#"><h2>Total Performance Score</h2></a>');
         
-        // quality
-        var template = '-- NO SCORE AVAILABLE --';
-        var patientRatingTemplate = '-- NO RATINGS --';
+        // total performance score
+        var tps = getTPSTemplate(pid);
+        oc.append(tps);
         
-        if(hcm.qualities.hasOwnProperty(pid)) {
-            var perfClass = '';
-            var num = 0;
-            if(hcm.qualities[pid].hasOwnProperty('total_performance_score')) {
-                // calculate the class
-                num = Math.round(parseInt(hcm.qualities[pid].total_performance_score) / 10);
-                perfClass = 'perf-' + num;
-                template = '<div class="progBarCont"> \
-                                    <div class="prog '+perfClass+'" style="width: '+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'%;"> \
-                                        <div class="progShadow"></div> \
-                                        <div class="progNum">'+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'</div> \
-                                    </div> \
-                                </div>';
-            }
-            
-            if(hcm.qualities[pid].hasOwnProperty('patient_rating')) {
-                if(hcm.qualities[pid].patient_rating.hasOwnProperty('patient_survey_star_rating')) {
-                    var rating = parseInt(hcm.qualities[pid].patient_rating.patient_survey_star_rating);
-                    if(!isNaN(rating)) {
-                        patientRatingTemplate = '<span class="stars">';
-                        for(var i = 1; i <= 5; i++) {
-                            var className = '';
-                            if(i > rating) {
-                                className = 'greyStar';
-                            }
-                            patientRatingTemplate += '<img class="'+className+'" src="images/mapicons-70/star.svg" />';
-                        }
-
-                        // set up the survey star rating
-                        patientRatingTemplate += '</span>';
-                    }
-                }
-            }
-        }
-        oc.append(template);
-        
-        // cost
-        var inpatientDollars = '-- NO DATA --';
-        var outpatientDollars = '-- NO DATA --';
-
-        if(hcm.hospitalsCosts.hasOwnProperty(pid)) {
-            var c = hcm.hospitalsCosts[pid];
-            
-            if(c.hasOwnProperty('avg_inpatient_costs')) {
-                var ids = getDollarSign(c.avg_inpatient_costs, HIGH_INPATIENT_STDEV, LOW_INPATIENT_STDEV);
-                inpatientDollars = '<span class="dollarSign">'+ getDollarString(ids)+'</span>';
-            }
-            
-            if(c.hasOwnProperty('avg_outpatient_costs')) {
-                var ods = getDollarSign(c.avg_outpatient_costs, HIGH_OUTPATIENT_STDEV, LOW_OUTPATIENT_STDEV);
-                outpatientDollars = '<span class="dollarSign">'+getDollarString(ods)+'</span>';
-            }
-        }
-        
-        var costTemplate =  '<div class="row dollar"> \
-                                <div class="col-md-4"> \
-                                    <h2>Overall Inpatient Cost</h2> \
-                                    '+inpatientDollars+' \
-                                </div> \
-                                <div class="col-md-4"> \
-                                    <h2>Overall Outpatient Cost</h2> \
-                                    '+outpatientDollars+' \
-                                </div> \
-                                <div class="col-md-4"> \
-                                    <h2>Patient Rating</h2> \
-                                    '+patientRatingTemplate+' \
-                                </div> \
-                            </div>';
-
+        // dollar signs and stars
+        var costTemplate = getCostsRatingsTemplate(pid);
         oc.append(costTemplate);
         
-        // cost charts
-        console.log('hospital inpatient costs')
-        console.log(hcm.inpatientCosts[pid]);
-        
+        // inpatient cost chart
         if(hcm.inpatientCosts.hasOwnProperty(pid)) {
-            var drgs = hcm.inpatientCosts[pid];
-            var charges = '';
-            for(var key in drgs) {
-                var def = drgs[key].drg_definition;
-                var charge = drgs[key].covered_charges;
-                
-                var tr =    '<tr> \
-                                <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace(' W MCC', '').replace(' W/O MCC', '').replace(' W CC', '').replace('- ', '')+'</td> \
-                                <td>$'+parseFloat(charge).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'</td> \
-                            </tr>';
-                
-                charges += tr;
-            }
-
-            var costChart = '<h2>Average Inpatient Charges</h2> \
-                            <div class="row charges"> \
-                                <div class="col-md-2"></div> \
-                                <div class="col-md-8"> \
-                                    <table class="table table-striped"> \
-                                        <thead> \
-                                            <tr> \
-                                                <th>Procedure</th> \
-                                                <th>Average Covered Charges (Medicare)</th> \
-                                            </tr> \
-                                        </thead> \
-                                        <tbody> \
-                                            '+charges+' \
-                                        </tbody> \
-                                    </table> \
-                                </div> \
-                                <div class="col-md-2"></div> \
-                            </div>';
-            
-            oc.append(costChart);
+            var inChart = getInpatientChartTemplate(pid);
+            oc.append(inChart);
         }
         
+        // outpatient cost chart
         if(hcm.outpatientCosts.hasOwnProperty(pid)) {
-            var mdcs = hcm.outpatientCosts[pid];
-            console.log(mdcs)
-            var charges = '';
-            for(var key in mdcs) {
-                var def = mdcs[key].apc_definition;
-                var charge = mdcs[key].submitted_charges;
-                
-                var tr =    '<tr> \
-                                <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace('- ', '')+'</td> \
-                                <td>$'+parseFloat(charge).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'</td> \
-                            </tr>';
-                charges += tr;
-            }
-
-            var costChart = '<h2>Average Outpatient Charges</h2> \
-                            <div class="row charges"> \
-                                <div class="col-md-2"></div> \
-                                <div class="col-md-8"> \
-                                    <table class="table table-striped"> \
-                                        <thead> \
-                                            <tr> \
-                                                <th>Procedure</th> \
-                                                <th>Average Estimated Submitted Charges (Medicare)</th> \
-                                            </tr> \
-                                        </thead> \
-                                        <tbody> \
-                                            '+charges+' \
-                                        </tbody> \
-                                    </table> \
-                                </div> \
-                                <div class="col-md-2"></div> \
-                            </div>';
-            
-            oc.append(costChart);
+            var outChart = getOutpatientChartTemplate(pid);
+            oc.append(outChart);
         }
         
+        // start and black and fade to white
+        TweenLite.from(oc, 0.25, {
+            backgroundColor: '#333',
+            ease: Power1.easeOut
+        });
         
-//        TweenLite.to(oc, 0.75, {
-//            top: 300,
-//            ease: Bounce.easeOut
-//        });
-
     };
     
     // helpers
@@ -251,11 +122,15 @@ var map, geocoder, markers = [];
             }
         });
     }
-
+    
+    
+    // map helpers
     function initMaps() {  
         var mapOptions = {
             zoom: 5,
-            center: new google.maps.LatLng(39.8282, -98.5795)
+            center: new google.maps.LatLng(39.8282, -98.5795),
+            scrollwheel: false,
+            streetViewControl: false
         };
         map = new google.maps.Map(document.getElementById('map-canvas'), mapOptions);
         geocoder = new google.maps.Geocoder();
@@ -265,7 +140,7 @@ var map, geocoder, markers = [];
             height: w * 0.3 + 'px'
         });
     }
-    
+
     function placeMarkers(callback) {
         for(var i = 0; i < hcm.hospitals.length; i++) {
             var h = hcm.hospitals[i];
@@ -320,6 +195,141 @@ var map, geocoder, markers = [];
         };
 
         return image;
+    }
+    
+    
+    // template helpers
+    function getTPSTemplate(pid) {
+        var template = '-- NO SCORE AVAILABLE --';
+        
+        if(hcm.qualities.hasOwnProperty(pid)) {
+            var perfClass = '';
+            var num = 0;
+            if(hcm.qualities[pid].hasOwnProperty('total_performance_score')) {
+                // calculate the class
+                num = Math.round(parseInt(hcm.qualities[pid].total_performance_score) / 10);
+                perfClass = 'perf-' + num;
+                template = '<div class="progBarCont"> \
+                                    <div class="prog '+perfClass+'" style="width: '+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'%;"> \
+                                        <div class="progShadow"></div> \
+                                        <div class="progNum">'+(parseInt(hcm.qualities[pid].total_performance_score)).toFixed(0)+'</div> \
+                                    </div> \
+                                </div>';
+            }
+        }
+        return template;
+    }
+    
+    function getCostsRatingsTemplate(pid) {
+        var inpatientDollars = '-- NO DATA --';
+        var outpatientDollars = '-- NO DATA --';
+
+        if(hcm.hospitalsCosts.hasOwnProperty(pid)) {
+            var c = hcm.hospitalsCosts[pid];
+            
+            if(c.hasOwnProperty('avg_inpatient_costs')) {
+                var ids = getDollarSign(c.avg_inpatient_costs, HIGH_INPATIENT_STDEV, LOW_INPATIENT_STDEV);
+                inpatientDollars = '<span class="dollarSign">'+ getDollarString(ids)+'</span>';
+            }
+            
+            if(c.hasOwnProperty('avg_outpatient_costs')) {
+                var ods = getDollarSign(c.avg_outpatient_costs, HIGH_OUTPATIENT_STDEV, LOW_OUTPATIENT_STDEV);
+                outpatientDollars = '<span class="dollarSign">'+getDollarString(ods)+'</span>';
+            }
+        }
+        
+        var patientRatingTemplate = getPatientRatingsTemplate(pid);
+        
+        var template =  '<div class="row dollar"> \
+                                <div class="col-md-4"> \
+                                    <h2>Overall Inpatient Cost</h2> \
+                                    '+inpatientDollars+' \
+                                </div> \
+                                <div class="col-md-4"> \
+                                    <h2>Overall Outpatient Cost</h2> \
+                                    '+outpatientDollars+' \
+                                </div> \
+                                <div class="col-md-4"> \
+                                    <h2>Patient Rating</h2> \
+                                    '+patientRatingTemplate+' \
+                                </div> \
+                            </div>';
+        
+        return template;
+    }
+    
+    function getPatientRatingsTemplate(pid) {
+        var template = '-- NO RATINGS --';
+        
+        if(hcm.qualities[pid].hasOwnProperty('patient_rating')) {
+            if(hcm.qualities[pid].patient_rating.hasOwnProperty('patient_survey_star_rating')) {
+                var rating = parseInt(hcm.qualities[pid].patient_rating.patient_survey_star_rating);
+                if(!isNaN(rating)) {
+                    template = '<span class="stars">';
+                    for(var i = 1; i <= 5; i++) {
+                        var className = '';
+                        if(i > rating) {
+                            className = 'greyStar';
+                        }
+                        template += '<img class="'+className+'" src="images/mapicons-70/star.svg" />';
+                    }
+
+                    // set up the survey star rating
+                    template += '</span>';
+                }
+            }
+        }
+        
+        return template;
+    }
+    
+    function getInpatientChartTemplate(pid) {
+        var drgs = hcm.inpatientCosts[pid];
+        var charges = formatRows(drgs, 'drg_definition', 'covered_charges');
+        return formatChart('Average Inpatient Charges', 'Procedure', 'Average Covered Charges (Medicare)', charges);
+    }
+    
+    function getOutpatientChartTemplate(pid) {
+        var mdcs = hcm.outpatientCosts[pid];
+        var charges = formatRows(mdcs, 'apc_definition', 'submitted_charges');        
+        return formatChart('Average Outpatient Charges', 'Procedure', 'Average Estimated Submitted Charges (Medicare)', charges);
+    }
+    
+    function formatRows(arr, defKey, chargeKey) {
+        var charges = '';
+        for(var key in arr) {
+            var def = arr[key][defKey];
+            var charge = arr[key][chargeKey];
+
+            var tr =    '<tr> \
+                            <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace(' W MCC', '').replace(' W/O MCC', '').replace(' W CC', '').replace('- ', '')+'</td> \
+                            <td>$'+parseFloat(charge).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'</td> \
+                        </tr>';
+
+            charges += tr;
+        }
+        return charges;
+    }
+    
+    function formatChart(title, t1h, t2h, charges) {
+        return '<h2>'+title+'</h2> \
+                <div class="row charges"> \
+                    <div class="col-md-2"></div> \
+                    <div class="col-md-8"> \
+                        <table class="table table-striped"> \
+                            <thead> \
+                                <tr> \
+                                    <th>'+t1h+'</th> \
+                                    <th>'+t2h+'</th> \
+                                </tr> \
+                            </thead> \
+                            <tbody> \
+                                '+charges+' \
+                            </tbody> \
+                        </table> \
+                    </div> \
+                    <div class="col-md-2"></div> \
+                </div>';
     }
     
     

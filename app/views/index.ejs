@@ -15,6 +15,7 @@
         <!-- styles -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
+        <link rel='stylesheet' href="css/loading.css">
         <link rel='stylesheet' href="css/progress-bar.css">
         <link rel='stylesheet' href="css/dollars-stars.css">
         <style>
@@ -58,7 +59,7 @@
             .overlayContainer {
                 width: 100%;
                 position: absolute;
-                top: 450px;
+                /*top: 450px;*/
                 left: 0;
                 padding: 50px;
                 background-color: rgba(255,255,255,0.95);
@@ -71,6 +72,18 @@
             
             .charges td {
                 text-align: left;
+            }
+            
+            @media only screen and (max-height: 350px) {
+                #map-canvas {
+                    min-height: 135px;
+                }
+            }
+            
+            @media only screen and (min-height: 351px) and (max-height: 550px) {
+                #map-canvas {
+                    min-height: 300px;
+                }
             }
             
         </style>
@@ -96,17 +109,24 @@
             (function($) {
                 $(window).load(function() {
                     
-                    hcm.init();
+                    hcm.init(function() {
+                        // done
+                        TweenLite.to($('.loadingContainer'), 0.25, {
+                            delay: 1.5,
+                            opacity: 0,
+                            onComplete: function() {
+                                this.target.css({
+                                    display: 'none'
+                                });
+                            }
+                        });
+                    });
                     
                     // events
-                    $('.overlayContainer').on('click', function(evt) {
-                        evt.preventDefault();
-                        var oc = $('.overlayContainer');
-                        
-//                        TweenLite.to(oc, 0.5, {
-//                            top: 500
-//                        });
-                    });
+//                    $('.overlayContainer').on('click', function(evt) {
+//                        evt.preventDefault();
+//                        var oc = $('.overlayContainer');
+//                    });
                     
                 });
             })(jQuery);
@@ -122,6 +142,19 @@
                 <section class="col-md-12-fluid">
                     <div class="mapContainer">
                         <div id="map-canvas"></div>
+                        <div class="loadingContainer">
+                            <div class="loadingBackgroundLayer">&nbsp;</div>
+                            <div class="loadingContentLayer">
+                                <span>loading</span>
+                                <span class="l1"></span>
+                                <span class="l2"></span>
+                                <span class="l3"></span>
+                                <span class="l4"></span>
+                                <span class="l5"></span>
+                                <span class="l6"></span>
+                            </div>
+                            
+                        </div>
                     </div>
                     <div class="overlayContainer">
                         <h1>How does your hospital compare?</h1>
