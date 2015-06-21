@@ -81,12 +81,14 @@ var map, geocoder, markers = [];
     
     HealthCareCostMapper.prototype.handleMarkerClick = function() {
         
+        console.log(this.hospital)
         var pid = this.hospital.provider_id;
         
         var oc = $('.overlayContainer');
                         
         oc.html('');
         oc.append('<h1>'+this.hospital.hospital_name+'</h1>');
+        oc.append('<address>'+getAddressTemplate(this.hospital)+'</address>');
         oc.append('<a href="#"><h2>Total Performance Score</h2></a>');
         
         // total performance score
@@ -256,6 +258,31 @@ var map, geocoder, markers = [];
     
     
     // template helpers
+    function getAddressTemplate(hospital) {
+        var addressStr = ''
+        if(hospital.hasOwnProperty('address')) {
+            addressStr += hospital.address;
+        }
+        
+        if(hospital.hasOwnProperty('city')) {
+            addressStr += '<br />' + hospital.city;
+        }
+        
+        if(hospital.hasOwnProperty('state')) {
+            addressStr += ', ' + hospital.state;
+        }
+        
+        if(hospital.hasOwnProperty('zip')) {
+            addressStr += ' ' + hospital.zip;
+        }
+        
+        if(hospital.hasOwnProperty('phone_number') && hospital.phone_number.hasOwnProperty('phone_number')) {
+            addressStr += '<br />' + hospital.phone_number.phone_number.replace(/(\d{3})(\d{3})(\d{4})/, "($1) $2-$3");
+        }
+        
+        return addressStr;
+    }
+    
     function getTPSTemplate(pid) {
         var template = '-- NO SCORE AVAILABLE --';
         
