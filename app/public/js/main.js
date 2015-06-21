@@ -15,7 +15,7 @@ function HealthCareCostMapper() {
 
 var hcm = new HealthCareCostMapper();
 
-var map, geocoder, markers = [];
+var map, geocoder, markers = [], openWindows = [], userHasSelectedProcedure = false, hospitalsWithProcedure = {};
 
 (function($) {
     
@@ -111,6 +111,8 @@ var map, geocoder, markers = [];
             oc.append(outChart);
         }
         
+        map.panTo(this.getPosition());
+        
         // start and black and fade to white
         TweenLite.from(oc, 0.25, {
             backgroundColor: '#c8c8c8',
@@ -119,10 +121,42 @@ var map, geocoder, markers = [];
         
     };
     
+    HealthCareCostMapper.prototype.handleMarkerHover = function() {
+        console.log(this);
+        var pid = this.hospital.provider_id;
+        
+        // assuming the currently hovered marker has the drg or mdc we are looking for
+        if(userHasSelectedProcedure && hcm.qualities.hasOwnProperty(pid) && hospitalsWithProcedure.hasOwnProperty(pid)) {
+            
+            console.log(hospitalsWithProcedure[pid]);
+            
+            var defKey = hospitalsWithProcedure.definitionKey;
+            var costKey = hospitalsWithProcedure.costKey;
+            
+            var content =   '<h2 style="text-align: center; font-size: 24px;">'+this.hospital.hospital_name+'</h2>';
+            content +=  '<p style="text-align: center; font-size: 18px; font-weight: lighter;"><span>'+formatDef(hospitalsWithProcedure[pid][defKey])+'</span>: <em>'+formatMoney(hospitalsWithProcedure[pid][costKey])+'</em></p>';
+            var infoWindow = new google.maps.InfoWindow({
+                content: content,
+                disableAutoPan: true
+            });
+
+            infoWindow.open(map,this);
+            
+            openWindows.push(infoWindow);
+        }
+    };
+    
+    HealthCareCostMapper.prototype.handleMarkerHoverOut = function() {
+        for(var i = 0, len = openWindows.length; i < len; i++) {
+            openWindows[i].close();
+        }
+    };
+    
     HealthCareCostMapper.prototype.filterBy = function(code, onComplete) {
         // TODO: go through all the markers and hide the ones that don't have this code in either thier mdc or drg
         
-        
+        // clear the list
+        hospitalsWithProcedure = {};
         
         for(var i = 0, len = markers.length; i < len; i++) {
             
@@ -132,13 +166,19 @@ var map, geocoder, markers = [];
             
             if(code === '*') {
                 // do nothing
+                userHasSelectedProcedure = false;
             } else if(typeof code === 'number') {
+                userHasSelectedProcedure = true;
+                hospitalsWithProcedure.definitionKey = 'drg_definition';
+                hospitalsWithProcedure.costKey = 'covered_charges';
                 // we have drg
                 if(hcm.inpatientCosts.hasOwnProperty(pid)) {
                     arr = hcm.inpatientCosts[pid];
                     if(!arr.hasOwnProperty(code)) {
                         // remove this marker from the map for the time being
                         markers[i].setVisible(false);
+                    } else {
+                        hospitalsWithProcedure[pid] = arr[code];
                     }
                 } else {
                     // remove this marker
@@ -146,11 +186,16 @@ var map, geocoder, markers = [];
                 }
             } else {
                 // we mdc
+                userHasSelectedProcedure = true;
+                hospitalsWithProcedure.definitionKey = 'apc_definition';
+                hospitalsWithProcedure.costKey = 'submitted_charges';
                 if(hcm.outpatientCosts.hasOwnProperty(pid)) {
                     arr = hcm.outpatientCosts[pid];
                     if(!arr.hasOwnProperty(code)) {
                         // remove this marker from the map for the time being
                         markers[i].setVisible(false);
+                    } else {
+                        hospitalsWithProcedure[pid] = arr[code];
                     }
                 } else {
                     // remove marker
@@ -158,12 +203,7 @@ var map, geocoder, markers = [];
                 }
             }
             
-                    
-            
-            
         }
-        
-        
         
         onComplete();
     };
@@ -182,6 +222,20 @@ var map, geocoder, markers = [];
         });
     }
     
+//    function getProcedure() {
+//        var proc = {
+//            def: '',
+//            cost: 0
+//        };
+//        
+//        if(typeof userSelectedProcedure === 'number') {
+//            // get inpatient drgs
+//        } else {
+//            // get outpatientmdcs
+//        }
+//        
+//        return proc;
+//    }
     
     // map helpers
     function initMaps() {  
@@ -234,16 +288,19 @@ var map, geocoder, markers = [];
             icon: image
         });
         google.maps.event.addListener(marker, 'click', hcm.handleMarkerClick);
+        google.maps.event.addListener(marker, 'mouseover', hcm.handleMarkerHover);
+        google.maps.event.addListener(marker, 'mouseout', hcm.handleMarkerHoverOut);
         marker.setMap(map);
         markers.push(marker);
     }
 
     function getMarkerIcon(tps) {
         var url;
+        var imageName = Math.floor(parseFloat(tps)/10);
         if(typeof tps === 'undefined') {
             url = "images/mapicons-70/generic.png";
         } else {
-            url = "images/mapicons-70/" + Math.floor(parseFloat(tps)/10) + ".png";
+            url = "images/mapicons-70/" + imageName + ".png";
         }
 
         var image = {
@@ -386,8 +443,8 @@ var map, geocoder, markers = [];
             var charge = arr[key][chargeKey];
 
             var tr =    '<tr> \
-                            <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace('W/O', '').replace('CC/MCC', '').replace(' W MCC', '').replace('MCC', '').replace(' W CC', '').replace('- ', '')+'</td> \
-                            <td>$'+parseFloat(charge).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'</td> \
+                            <td>'+formatDef(def)+'</td> \
+                            <td>'+formatMoney(charge)+'</td> \
                         </tr>';
 
             charges += tr;
@@ -415,6 +472,8 @@ var map, geocoder, markers = [];
                     <div class="col-md-2"></div> \
                 </div>';
     }
+    
+    
     
     
 })(jQuery);

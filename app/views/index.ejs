@@ -108,6 +108,7 @@
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
         <script src="https://maps.googleapis.com/maps/api/js?v=3.exp"></script>
         <script src="https://google-maps-utility-library-v3.googlecode.com/svn-history/r391/trunk/markerwithlabel/src/markerwithlabel.js"></script>
+        <script src="js/helpers.js"></script>
         <script src="js/markerclusterer.js"></script>
         <script src="js/dollar.js"></script>
         <script src="js/main.js"></script>
@@ -205,8 +206,8 @@
                     
                     function populateProcedures() {
                         for(var i = 0, len = hcm.definitions.length; i < len; i++) {
-                            var def = hcm.definitions[i].def;
-                            def = def.substr(def.search(/[a-zA-Z ]+/)).replace('W/O', '').replace('CC/MCC', '').replace(' W MCC', '').replace('MCC', '').replace(' W CC', '').replace('- ', '');
+                            var def = formatDef(hcm.definitions[i].def);
+//                            def = def.substr(def.search(/[a-zA-Z ]+/)).replace('W/O', '').replace('CC/MCC', '').replace(' W MCC', '').replace('MCC', '').replace(' W CC', '').replace('- ', '');
                             $procedures.append('<option data-code="'+hcm.definitions[i].code+'">'+def+'</option>');
                         }
                     }

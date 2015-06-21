@@ -262,10 +262,11 @@ function outputDefinitions(callback) {
             var drgs = inpatient[inKey];
             for(var drgCode in drgs) {
                 if(typeof drgArr[drgCode] === 'undefined') {
-                    drgArr[drgCode] = drgs[drgCode].drg_definition;
+                    var def = formatDef(drgs[drgCode].drg_definition);
+                    drgArr[drgCode] = def;
                     var obj = {
                         code: drgCode,
-                        def: drgs[drgCode].drg_definition
+                        def: def
                     };
                     mdcsDrgs.push(obj);
                 }
@@ -276,19 +277,57 @@ function outputDefinitions(callback) {
             var mdcs = outpatient[outKey];
             for(var mdcCode in mdcs) {
                 if(typeof mdcArr[mdcCode] === 'undefined') {
-                    mdcArr[mdcCode] = mdcs[mdcCode].apc_definition;
+                    var def = formatDef(mdcs[mdcCode].apc_definition);
+                    mdcArr[mdcCode] = def;
                     var obj = {
                         code: mdcCode,
-                        def: mdcs[mdcCode].apc_definition
+                        def: def
                     };
                     mdcsDrgs.push(obj);
                 }
             }
         }
         
-        callback(mdcsDrgs);
+        callback(sortDefinitions(mdcsDrgs));
 
     }
+}
+
+function sortDefinitions(def) {
+    
+    var sorted = [];
+    
+//    function compare(a, b) {
+//        var strA = a.def;
+//        var strB = b.def;
+//        var idx = 0;
+//        
+//        function compareStr(_a, _b) {
+//            
+//            if(idx >= _a.length) {
+//                return 0;
+//            }
+//            
+//            if(_a.substr(idx, 1) < _b.substr(idx, 1)) {
+//                // a is in the right place return negative
+//                return -1;
+//            } else if(_a.substr(idx, 1) > _b.substr(idx, 1)) {
+//                // a is greater so return positive
+//                return 1;
+//            } else {
+//                idx++;
+//                compareStr(_a, _b);
+//            }
+//        }
+//        
+//        return compareStr(strA, strB);
+//    }
+    
+    return def.sort(function(a,b) {
+        var textA = a.def;
+        var textB = b.def;
+        return (textA < textB) ? -1 : (textA > textB) ? 1 : 0;
+    });
 }
 
 function outputAvgCostList(callback, attrName) {
@@ -581,4 +620,8 @@ function padPid(obj) {
 function pad(num, places) {
     var zero = places - num.toString().length + 1;
     return Array(+(zero > 0 && zero)).join("0") + num;
+}
+
+function formatDef(def) {
+    return def.substr(def.search(/[a-zA-Z ]+/)).replace('-', '').trim();
 }

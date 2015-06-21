@@ -100,16 +100,20 @@ nav.down .row {
 .custom-dropdown::after {
   color: rgba(0,0,0,.4);
 }
+
+nav select, nav select option {
+    text-transform: uppercase;
+}
 /* Custom dropdown */
 
 nav .pullDown {
     position: absolute;
     left: 50%;
-    bottom: -44px;
-    width: 200px;
-    height: 44px;
+    bottom: -33px;
+    width: 150px;
+    height: 33px;
+    margin-left: -75px;
     display: block;
-    margin-left: -100px;
     
     background: url(../images/pull-down.svg) scroll no-repeat;
     background-size: contain;
@@ -120,8 +124,12 @@ nav .pullDown {
 
 nav .pullDown:hover {
     background: url(../images/pull-down-hover.svg) scroll no-repeat;
+    background-size: contain;
+    background-position: center top;
 }
 
 nav .pullDownPulled {
     background: url(../images/pull-down-hover.svg) scroll no-repeat;
+    background-size: contain;
+    background-position: center top;
 }
