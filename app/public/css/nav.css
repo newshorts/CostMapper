@@ -36,7 +36,8 @@ nav.down .row {
 
 /* Custom dropdown */
 .big {
-  font-size: 24px;
+  font-size: 18px;
+  /*font-weight: 300;*/
 }
 
 .custom-dropdown {
@@ -49,7 +50,7 @@ nav.down .row {
 .custom-dropdown select {
   background-color: white;
   color: #2c2c2c;
-  font-size: inherit;
+  /*font-size: inherit;*/
   padding: .5em;
   /*padding-right: 2.5em;*/	
   border: 1px solid #eaecee;
