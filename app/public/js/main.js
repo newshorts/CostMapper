@@ -10,6 +10,7 @@ function HealthCareCostMapper() {
     this.qualities = {};
     this.inpatientCosts = {};
     this.outpatientCosts = {};
+    this.definitions = [];
 };
 
 var hcm = new HealthCareCostMapper();
@@ -54,18 +55,24 @@ var map, geocoder, markers = [];
             handleAllDataLoaded();
         });
         
+        get('data/definitions.json', function(data) {
+            hcm.definitions = data;
+            count++;
+            handleAllDataLoaded();
+        });
+        
         function handleAllDataLoaded() {
-            if(count === 5) {
+            if(count === 6) {
                 console.log('all data loaded');
-                console.log(hcm);
                 
                 // continue loading the page
                 placeMarkers(function() {
                     var mcOptions = {gridSize: 100, maxZoom: 6, imagePath: 'images/mapicons-70/m'};
                     var markerCluster = new MarkerClusterer(map, markers, mcOptions);
                     // callback
+                    
                     if(typeof callback != 'undefined') {
-                        callback();
+                        setTimeout(callback, 100);
                     }
                 });
             }
@@ -104,10 +111,14 @@ var map, geocoder, markers = [];
         
         // start and black and fade to white
         TweenLite.from(oc, 0.25, {
-            backgroundColor: '#333',
+            backgroundColor: '#c8c8c8',
             ease: Power1.easeOut
         });
         
+    };
+    
+    HealthCareCostMapper.prototype.filterBy = function(code) {
+        // TODO: go through all the markers and hide the ones that don't have this code in either thier mdc or drg
     };
     
     // helpers
@@ -302,7 +313,7 @@ var map, geocoder, markers = [];
             var charge = arr[key][chargeKey];
 
             var tr =    '<tr> \
-                            <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace(' W MCC', '').replace(' W/O MCC', '').replace(' W CC', '').replace('- ', '')+'</td> \
+                            <td>'+def.substr(def.search(/[a-zA-Z ]+/)).replace('W/O', '').replace('CC/MCC', '').replace(' W MCC', '').replace('MCC', '').replace(' W CC', '').replace('- ', '')+'</td> \
                             <td>$'+parseFloat(charge).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,')+'</td> \
                         </tr>';
 

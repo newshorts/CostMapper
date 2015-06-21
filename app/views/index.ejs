@@ -16,6 +16,7 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap-theme.min.css">
         <link rel='stylesheet' href="css/loading.css">
+        <link rel='stylesheet' href="css/nav.css">
         <link rel='stylesheet' href="css/progress-bar.css">
         <link rel='stylesheet' href="css/dollars-stars.css">
         <style>
@@ -26,6 +27,12 @@
             body {
                 font-family: 'Khula', sans-serif;
                 color: #2c2c2c;
+            }
+            
+            main,
+            header,
+            footer {
+                position: relative;
             }
             
             h1 {
@@ -41,10 +48,8 @@
             #map-canvas {
                 width: 100%;
                 min-height: 450px;
-            }
-            
-            nav {
-                height: 20px;
+                
+                z-index: 10;
             }
             
             section {
@@ -64,6 +69,9 @@
                 padding: 50px;
                 background-color: rgba(255,255,255,0.95);
                 text-align: center;
+                box-shadow: 2px 0px 3px #777;
+    
+                z-index: 20;
             }
             
             .charges {
@@ -109,13 +117,25 @@
             (function($) {
                 $(window).load(function() {
                     
+                    // globals
+                    var $nav = $('nav'),
+                        $window = $(window),
+                        $pullDown = $('.pullDown'),
+                        $procedures = $('.procedures'),
+                        $loader = $('.loadingContainer');
+                       
+                    // INIT
                     hcm.init(function() {
-                        // done
-                        TweenLite.to($('.loadingContainer'), 0.25, {
+                        console.log(hcm);
+                        
+                        // populate the filter
+                        populateProcedures();
+                        
+                        TweenLite.to($loader, 0.25, {
                             delay: 1.5,
                             opacity: 0,
                             onComplete: function() {
-                                this.target.css({
+                                $loader.css({
                                     display: 'none'
                                 });
                             }
@@ -123,10 +143,98 @@
                     });
                     
                     // events
-//                    $('.overlayContainer').on('click', function(evt) {
-//                        evt.preventDefault();
-//                        var oc = $('.overlayContainer');
-//                    });
+                    $pullDown.on('click', function(evt) {
+                        evt.preventDefault();
+                        if($nav.hasClass('down')) {
+                            // go back up
+                            pullDownUp(function() {
+                                console.log('up')
+                            });
+                        } else {
+                            pullDownDown(function() {
+                                console.log('down')
+                            });
+                        }
+                    });
+                    
+                    $procedures.on('change', function(evt) {
+                        evt.preventDefault();
+                        pullDownUp(function() {
+                            // show the loader
+                            $loader.css({
+                                display: 'block'
+                            });
+                            
+                            TweenLite.to($loader, 0.25, {
+                                opacity: 1,
+                                onComplete: function() {
+                                    // showing
+                                    var selected = $(".procedures option:selected");
+                                    hcm.filterBy(selected.data('code'));
+                                }
+                            });
+                        });
+                    });
+                    
+                    // helpers
+                    function populateProcedures() {
+                        for(var i = 0, len = hcm.definitions.length; i < len; i++) {
+                            var def = hcm.definitions[i].def;
+                            def = def.substr(def.search(/[a-zA-Z ]+/)).replace('W/O', '').replace('CC/MCC', '').replace(' W MCC', '').replace('MCC', '').replace(' W CC', '').replace('- ', '');
+                            $procedures.append('<option data-code="'+hcm.definitions[i].code+'">'+def+'</option>');
+                        }
+                    }
+                    
+                    function pullDownDown(onComplete) {
+                        var w = $window.width(),
+                            h = $window.height();
+                    
+                        var tl = new TimelineLite();
+                        
+                        tl.to($nav, 0.5, {
+                            height: 260,
+                            ease: Power2.easeInOut,
+                            onComplete: function() {
+                                $nav.find('.row').css({
+                                    display: 'block'
+                                });
+                            }
+                        });
+                        
+                        tl.to($nav.find('.row'), 0.25, {
+                            opacity: 1,
+                            onComplete: function() {
+                                $pullDown.addClass('pullDownPulled');
+                                $nav.addClass('down');
+                                onComplete();
+                            }
+                        });
+                        
+                    }
+                    
+                    function pullDownUp(onComplete) {
+                        
+                        var tl = new TimelineLite();
+                        
+                        tl.to($nav.find('.row'), 0.25, {
+                            opacity: 0,
+                            onComplete: function() {
+                                $nav.find('.row').css({
+                                    display: 'none'
+                                });
+                            }
+                        });
+                        
+                        tl.to($nav, 0.5, {
+                            height: 10,
+                            ease: Power2.easeInOut,
+                            onComplete: function() {
+                                $pullDown.removeClass('pullDownPulled');
+                                $nav.removeClass('down');
+                                onComplete();
+                            }
+                        });
+                    }
                     
                 });
             })(jQuery);
@@ -136,7 +244,23 @@
     <body>
         <div class="container-fluid">
             <header class="row">
-                <nav class="col-md-12-fluid"></nav>
+                <nav class="col-md-12-fluid">
+                    <div class="row">
+                        <div class="col-md-2">
+                            &nbsp;
+                        </div>
+                        <div class="col-md-8">
+                            <h2>Filter by procedure:</h2>
+                            <span class="custom-dropdown big">
+                                <select class="procedures">    
+                                    <option data-code="*">All</option>
+                                </select>
+                            </span>
+                        </div>
+                    </div>
+                    <div class="col-md-2">&nbsp;</div>
+                    <a class="pullDown" href="#"></a>
+                </nav>
             </header>
             <main class="row">
                 <section class="col-md-12-fluid">

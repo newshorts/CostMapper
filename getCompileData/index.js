@@ -18,7 +18,7 @@
  * 6. /drgAvgs --> drgAvgs.json (depends on inpatient.json) (computes the national average for a specific drg)
  * 7. /mdcAvgs --> mdcAvgs.json (depends on outpatient.json) (computes the national average for a specific mdc)
  * 8. /compareHospitalCosts --> hospitalsCosts.json (depends on hospitals.json, outpatient.json, inpatient.json, drgAvgs.json, mdcAvgs.json)
- * 
+ * 9. /definitions --> output definitions into a json file for bot mdcs and drgs
  * 
  * Output Data sets in different variations
  * /getInpatientAvgCost --> inpatientAvgCost.json (outputs a list of inpatient average cost per hospital)
@@ -238,11 +238,59 @@ app.get('/getOutpatientAvgCost', function (req, res) {
     }, 'avg_outpatient_costs');
 });
 
+app.get('/definitions', function(req, res) {
+    outputDefinitions(function(list) {
+        saveFile('data/definitions.json', list, res);
+    });
+});
+
 app.listen(app.get('port'), function() {
     console.log("Node app is running at localhost:" + app.get('port'));
 });
 
 // helpers
+function outputDefinitions(callback) {
+    var inpatient = require('./data/inpatient.json');
+    var outpatient = require('./data/outpatient.json');
+    
+    var drgArr = {};
+    var mdcArr = {};
+    var mdcsDrgs = [];
+    
+    if(mdcsDrgs.length === 0) {
+        for(var inKey in inpatient) {
+            var drgs = inpatient[inKey];
+            for(var drgCode in drgs) {
+                if(typeof drgArr[drgCode] === 'undefined') {
+                    drgArr[drgCode] = drgs[drgCode].drg_definition;
+                    var obj = {
+                        code: drgCode,
+                        def: drgs[drgCode].drg_definition
+                    };
+                    mdcsDrgs.push(obj);
+                }
+            }
+        }
+
+        for(var outKey in outpatient) {
+            var mdcs = outpatient[outKey];
+            for(var mdcCode in mdcs) {
+                if(typeof mdcArr[mdcCode] === 'undefined') {
+                    mdcArr[mdcCode] = mdcs[mdcCode].apc_definition;
+                    var obj = {
+                        code: mdcCode,
+                        def: mdcs[mdcCode].apc_definition
+                    };
+                    mdcsDrgs.push(obj);
+                }
+            }
+        }
+        
+        callback(mdcsDrgs);
+
+    }
+}
+
 function outputAvgCostList(callback, attrName) {
     var costs = require('./data/hospitalsCosts.json');
     var list = [];

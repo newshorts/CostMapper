@@ -1,0 +1,127 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jun 20, 2015, 7:52:00 PM
+    Author     : mike_newell
+*/
+
+nav {
+    position: absolute;
+    width: 100%;
+    height: 10px;
+    
+    background-color: white;
+    text-align: center;
+    overflow: visible;
+    box-shadow: -2px 2px 3px #777;
+    
+    z-index: 20;
+}
+
+nav .row {
+    display: none;
+    opacity: 0;
+    
+    margin-top: 30px;
+}
+
+
+
+nav.down .row {
+    display: block;
+}
+
+/* Custom dropdown */
+.big {
+  font-size: 24px;
+}
+
+.custom-dropdown {
+  position: relative;
+  display: inline-block;
+  vertical-align: middle;
+  margin: 30px 0 0 0; /* demo only */
+}
+
+.custom-dropdown select {
+  background-color: white;
+  color: #2c2c2c;
+  font-size: inherit;
+  padding: .5em;
+  /*padding-right: 2.5em;*/	
+  border: 1px solid #eaecee;
+  margin: 0;
+  border-radius: 3px;
+  text-indent: 0.01px;
+  text-overflow: '';
+  -webkit-appearance: button; /* hide default arrow in chrome OSX */
+}
+
+.custom-dropdown::before,
+.custom-dropdown::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+}
+
+.custom-dropdown::after { /*  Custom dropdown arrow */
+  content: "\25BC";
+  height: 1em;
+  font-size: .625em;
+  line-height: 1;
+  right: 1.2em;
+  top: 50%;
+  margin-top: -.5em;
+}
+
+.custom-dropdown::before { /*  Custom dropdown arrow cover */
+  width: 2em;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 0 3px 3px 0;
+}
+
+.custom-dropdown select[disabled] {
+  color: rgba(0,0,0,.3);
+}
+
+.custom-dropdown select[disabled]::after {
+  color: rgba(0,0,0,.1);
+}
+
+.custom-dropdown::before {
+  background-color: rgba(0,0,0,.15);
+}
+
+.custom-dropdown::after {
+  color: rgba(0,0,0,.4);
+}
+/* Custom dropdown */
+
+nav .pullDown {
+    position: absolute;
+    left: 50%;
+    bottom: -44px;
+    width: 200px;
+    height: 44px;
+    display: block;
+    margin-left: -100px;
+    
+    background: url(../images/pull-down.svg) scroll no-repeat;
+    background-size: contain;
+    background-position: center top;
+    
+    z-index: 20;
+}
+
+nav .pullDown:hover {
+    background: url(../images/pull-down-hover.svg) scroll no-repeat;
+}
+
+nav .pullDownPulled {
+    background: url(../images/pull-down-hover.svg) scroll no-repeat;
+}
