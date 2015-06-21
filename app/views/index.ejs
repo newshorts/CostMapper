@@ -161,22 +161,42 @@
                         evt.preventDefault();
                         pullDownUp(function() {
                             // show the loader
-                            $loader.css({
-                                display: 'block'
-                            });
-                            
-                            TweenLite.to($loader, 0.25, {
-                                opacity: 1,
-                                onComplete: function() {
-                                    // showing
-                                    var selected = $(".procedures option:selected");
-                                    hcm.filterBy(selected.data('code'));
-                                }
+                            showLoader(function() {
+                                // showing
+                                var selected = $(".procedures option:selected");
+                                hcm.filterBy(selected.data('code'), function() {
+                                    hideLoader(function() {
+                                        // done
+                                    });
+                                });
                             });
                         });
                     });
                     
                     // helpers
+                    function showLoader(onComplete) {
+                        $loader.css({
+                            display: 'block'
+                        });
+                        
+                        TweenLite.to($loader, 0.25, {
+                            opacity: 1,
+                            onComplete: onComplete
+                        });
+                    }
+                    
+                    function hideLoader(onComplete) {
+                        TweenLite.to($loader, 0.25, {
+                            opacity: 0,
+                            onComplete: function() {
+                                $loader.css({
+                                    display: 'none'
+                                });
+                                onComplete();
+                            }
+                        });
+                    }
+                    
                     function populateProcedures() {
                         for(var i = 0, len = hcm.definitions.length; i < len; i++) {
                             var def = hcm.definitions[i].def;

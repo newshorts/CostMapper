@@ -117,11 +117,57 @@ var map, geocoder, markers = [];
         
     };
     
-    HealthCareCostMapper.prototype.filterBy = function(code) {
+    HealthCareCostMapper.prototype.filterBy = function(code, onComplete) {
         // TODO: go through all the markers and hide the ones that don't have this code in either thier mdc or drg
+        
+        
+        
+        for(var i = 0, len = markers.length; i < len; i++) {
+            
+            markers[i].setVisible(true);
+            var pid = markers[i].hospital.provider_id;
+            var arr = {};
+            
+            if(code === '*') {
+                // do nothing
+            } else if(typeof code === 'number') {
+                // we have drg
+                if(hcm.inpatientCosts.hasOwnProperty(pid)) {
+                    arr = hcm.inpatientCosts[pid];
+                    if(!arr.hasOwnProperty(code)) {
+                        // remove this marker from the map for the time being
+                        markers[i].setVisible(false);
+                    }
+                } else {
+                    // remove this marker
+                    markers[i].setVisible(false);
+                }
+            } else {
+                // we mdc
+                if(hcm.outpatientCosts.hasOwnProperty(pid)) {
+                    arr = hcm.outpatientCosts[pid];
+                    if(!arr.hasOwnProperty(code)) {
+                        // remove this marker from the map for the time being
+                        markers[i].setVisible(false);
+                    }
+                } else {
+                    // remove marker
+                    markers[i].setVisible(false);
+                }
+            }
+            
+                    
+            
+            
+        }
+        
+        
+        
+        onComplete();
     };
     
     // helpers
+    
     function get(url, callback) {
         $.get(url, function(data) {
             if(typeof callback === "function") {
