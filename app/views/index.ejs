@@ -166,11 +166,13 @@
                     
                     $procedures.on('change', function(evt) {
                         evt.preventDefault();
+                        
+                        var selected = $(".procedures option:selected");
+                        
                         pullDownUp(function() {
                             // show the loader
                             showLoader(function() {
                                 // showing
-                                var selected = $(".procedures option:selected");
                                 hcm.filterBy(selected.data('code'), function() {
                                     hideLoader(function() {
                                         // done
@@ -282,6 +284,10 @@
                                 </select>
                             </span>
                         </div>
+<!--                        <div class="col-md-12 currentFilter">
+                            <h2>Filter by:</h2>
+                            <p>ACUTE MYOCARDIAL INFARCTION</p>
+                        </div>-->
                     </div>
                     <!--<div class="col-md-1">&nbsp;</div>-->
                     <a class="pullDown" href="#"></a>
