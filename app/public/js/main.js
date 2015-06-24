@@ -81,7 +81,6 @@ var map, geocoder, markers = [], openWindows = [], userHasSelectedProcedure = fa
     
     HealthCareCostMapper.prototype.handleMarkerClick = function() {
         
-        console.log(this.hospital)
         var pid = this.hospital.provider_id;
         
         var oc = $('.overlayContainer');
@@ -89,26 +88,33 @@ var map, geocoder, markers = [], openWindows = [], userHasSelectedProcedure = fa
         oc.html('');
         oc.append('<h1>'+this.hospital.hospital_name+'</h1>');
         oc.append('<address>'+getAddressTemplate(this.hospital)+'</address>');
-        oc.append('<a href="#"><h2>Total Performance Score</h2></a>');
+        
+        oc.append('<hr />');
         
         // total performance score
         var tps = getTPSTemplate(pid);
+        oc.append('<h2>Total Performance Score</h2>');
         oc.append(tps);
+        
         
         // dollar signs and stars
         var costTemplate = getCostsRatingsTemplate(pid);
         oc.append(costTemplate);
         
+        oc.append('<hr />');
+        
         // inpatient cost chart
         if(hcm.inpatientCosts.hasOwnProperty(pid)) {
             var inChart = getInpatientChartTemplate(pid);
             oc.append(inChart);
+            
         }
         
         // outpatient cost chart
         if(hcm.outpatientCosts.hasOwnProperty(pid)) {
             var outChart = getOutpatientChartTemplate(pid);
             oc.append(outChart);
+            
         }
         
         map.panTo(this.getPosition());
@@ -122,19 +128,16 @@ var map, geocoder, markers = [], openWindows = [], userHasSelectedProcedure = fa
     };
     
     HealthCareCostMapper.prototype.handleMarkerHover = function() {
-        console.log(this);
         var pid = this.hospital.provider_id;
         
         // assuming the currently hovered marker has the drg or mdc we are looking for
         if(userHasSelectedProcedure && hcm.qualities.hasOwnProperty(pid) && hospitalsWithProcedure.hasOwnProperty(pid)) {
             
-            console.log(hospitalsWithProcedure[pid]);
-            
             var defKey = hospitalsWithProcedure.definitionKey;
             var costKey = hospitalsWithProcedure.costKey;
             
             var content =   '<h2 style="text-align: center; font-size: 24px;">'+this.hospital.hospital_name+'</h2>';
-            content +=  '<p style="text-align: center; font-size: 18px; font-weight: lighter;"><span>'+formatDef(hospitalsWithProcedure[pid][defKey])+'</span>: <em>'+formatMoney(hospitalsWithProcedure[pid][costKey])+'</em></p>';
+            content +=  '<p style="text-align: center; font-size: 18px; font-weight: lighter;"><span>'+formatDef(hospitalsWithProcedure[pid][defKey])+'</span>: <br /><em>'+formatMoney(hospitalsWithProcedure[pid][costKey])+'</em></p>';
             var infoWindow = new google.maps.InfoWindow({
                 content: content,
                 disableAutoPan: true

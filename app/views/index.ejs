@@ -35,6 +35,15 @@
                 position: relative;
             }
             
+            header {
+                text-align: center;
+            }
+            
+            header p {
+                font-weight: lighter;
+                font-size: 18px;
+            }
+            
             h1 {
                 font-size: 42px;
                 max-width: 768px;
@@ -43,6 +52,19 @@
             
             p {
                 font-size: 28px;
+            }
+            
+            em {
+                font-size: 24px;
+                font-weight: bolder;
+                line-height: 30px;
+                display: inline-block;
+                margin-top: 8px;
+            }
+            
+            hr {
+                margin-top: 50px;
+                margin-bottom: 70px;
             }
             
             #map-canvas {
@@ -63,8 +85,7 @@
             
             .overlayContainer {
                 width: 100%;
-                position: absolute;
-                /*top: 450px;*/
+                position: relative;
                 left: 0;
                 padding: 50px;
                 background-color: rgba(255,255,255,0.95);
@@ -98,6 +119,17 @@
                 #map-canvas {
                     min-height: 300px;
                 }
+            }
+            
+            footer {
+                margin-top: 50px;
+                margin-bottom: 30px;
+            }
+            
+            footer p {
+                font-size: 16px;
+                font-weight: lighter;
+                text-align: center;
             }
             
         </style>
@@ -275,7 +307,6 @@
             <header class="row">
                 <nav class="col-md-12-fluid">
                     <div class="row">
-                        <!--<div class="col-md-1">&nbsp;</div>-->
                         <div class="col-md-12">
                             <h2>Filter by procedure:</h2>
                             <span class="custom-dropdown big">
@@ -289,7 +320,6 @@
                             <p>ACUTE MYOCARDIAL INFARCTION</p>
                         </div>-->
                     </div>
-                    <!--<div class="col-md-1">&nbsp;</div>-->
                     <a class="pullDown" href="#"></a>
                 </nav>
             </header>
@@ -318,7 +348,9 @@
                 </section>
             </main>
             <footer class="row">
-                
+                <div class="col-md-12-fluid">
+                    <p>Made just for you by <a href="http://iwearshorts.com/">Mike Newell</a>.</p>
+                </div>
             </footer>
         </div> 
     </body>
