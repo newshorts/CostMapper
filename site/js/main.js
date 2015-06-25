@@ -15,78 +15,87 @@ function HealthCareCostMapper() {
 
 var hcm = new HealthCareCostMapper();
 
-var map, geocoder, markers = [], openWindows = [], userHasSelectedProcedure = false, hospitalsWithProcedure = {};
+var map, 
+    geocoder, 
+    markers = [], 
+    openWindows = [], 
+    userHasSelectedProcedure = false, 
+    hospitalsWithProcedure = {};
 
 (function($) {
     
-    HealthCareCostMapper.prototype.init = function(callback) {
+    HealthCareCostMapper.prototype.init = function(callback, statusUpdate) {
         initMaps();
         
-        var count = 0;
+        var hospitalsShowingOnMap = false;
         
         if(ga) {
             ga('send', 'event', 'jsonDataLoading', 'loading', 'started');
         }
         
         // load all the data for the page
+        statusUpdate("Loading hospitals");
         get('data/hospitals.json', function(data) {
             hcm.hospitals = data;
-            count++;
-            handleAllDataLoaded();
-        });
-        
-        get('data/quality.json', function(data) {
-            hcm.qualities = data;
-            count++;
-            handleAllDataLoaded();
-        });
-        
-        get('data/inpatient.json', function(data) {
-            hcm.inpatientCosts = data;
-            count++;
-            handleAllDataLoaded();
-        });
-        
-        get('data/outpatient.json', function(data) {
-            hcm.outpatientCosts = data;
-            count++;
-            handleAllDataLoaded();
-        });
-        
-        get('data/hospitalsCosts.json', function(data) {
-            hcm.hospitalsCosts = data;
-            count++;
-            handleAllDataLoaded();
-        });
-        
-        get('data/definitions.json', function(data) {
-            hcm.definitions = data;
-            count++;
-            handleAllDataLoaded();
-        });
-        
-        function handleAllDataLoaded() {
-            if(count === 6) {
-                console.log('all data loaded');
+            
+            
+            statusUpdate("Loading scores");
+            get('data/quality.json', function(data) {
+                hcm.qualities = data;
                 
+                
+                statusUpdate("Loading costs");
+                get('data/hospitalsCosts.json', function(data) {
+                    hcm.hospitalsCosts = data;
+                    
+                    
+                    statusUpdate("Loading definitions");
+                    get('data/definitions.json', function(data) {
+                        hcm.definitions = data;
+                        
+                        
+                        statusUpdate("Loading inpatient data");
+                        setTimeout(handleHospitalsQualitiesLoaded, 900);
+                        get('data/inpatient.json', function(data) {
+                            hcm.inpatientCosts = data;
+                            
+                            
+                            statusUpdate("Loading outpatient data");
+                            get('data/outpatient.json', function(data) {
+                                hcm.outpatientCosts = data;
+                                
+                                
+                                callCallback();
+                            });
+                        });
+                    });
+                });
+            });
+            
+        });
+        
+        function callCallback() {
+            if(typeof callback != 'undefined' && hospitalsShowingOnMap) {
                 if(ga) {
                     ga('send', 'event', 'jsonDataLoading', 'loading', 'success');
                 }
                 
-                
-                
-                
-                // continue loading the page
-                placeMarkers(function() {
-                    var mcOptions = {gridSize: 100, maxZoom: 6, imagePath: 'images/mapicons-70/m'};
-                    var markerCluster = new MarkerClusterer(map, markers, mcOptions);
-                    // callback
-                    
-                    if(typeof callback != 'undefined') {
-                        setTimeout(callback, 100);
-                    }
-                });
+                statusUpdate("Loading");
+                callback();
+            } else {
+                setTimeout(callCallback, 1000);
             }
+        }
+        
+        function handleHospitalsQualitiesLoaded() {
+
+            // continue loading the page
+            placeMarkers(function() {
+                var mcOptions = {gridSize: 100, maxZoom: 6, imagePath: 'images/mapicons-70/m'};
+                var markerCluster = new MarkerClusterer(map, markers, mcOptions);
+                // 
+                hospitalsShowingOnMap = true;
+            });
         }
     };
     

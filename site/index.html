@@ -171,10 +171,13 @@
                         $window = $(window),
                         $pullDown = $('.pullDown'),
                         $procedures = $('.procedures'),
-                        $loader = $('.loadingContainer');
+                        $loader = $('.loadingContainer'),
+                        $loadingDescription = $('.loadingDescription');
                        
                     // INIT
                     hcm.init(function() {
+                        // done
+                        
                         console.log(hcm);
                         
                         // populate the filter
@@ -189,7 +192,7 @@
                                 });
                             }
                         });
-                    });
+                    }, changeLoaderDescription);
                     
                     // events
                     $pullDown.on('click', function(evt) {
@@ -229,6 +232,11 @@
                     });
                     
                     // helpers
+                    function changeLoaderDescription(str) {
+                        $loadingDescription.text(str);
+                    }
+                    
+                    
                     function showLoader(onComplete) {
                         ga('send', 'event', 'loaderScreen', 'showing');
                         
@@ -348,7 +356,8 @@
                         <div class="loadingContainer">
                             <div class="loadingBackgroundLayer">&nbsp;</div>
                             <div class="loadingContentLayer">
-                                <span>loading</span>
+                                <p class="loadingDescription">loading</p>
+<!--                                <span class="loadingDescription">loading</span>-->
                                 <span class="l1"></span>
                                 <span class="l2"></span>
                                 <span class="l3"></span>
@@ -362,6 +371,7 @@
                     <div class="overlayContainer">
                         <h1>How does your hospital compare?</h1>
                         <p>Here you'll find national hospital rankings and what they charge for the most common procedures.</p>
+                        <p>There's been a ton of press about this, <a href="http://www.washingtonpost.com/blogs/wonkblog/wp/2013/05/08/one-hospital-charges-8000-another-38000/">find out more</a>.</p>
                     </div>
                 </section>
             </main>
