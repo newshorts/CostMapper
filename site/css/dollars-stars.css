@@ -1,0 +1,38 @@
+/*
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+*/
+/* 
+    Created on : Jun 13, 2015, 9:00:25 AM
+    Author     : mike_newell
+*/
+
+.dollar {
+    margin-top: 70px;
+}
+
+.dollarSign {
+    font-size: 42px;
+    letter-spacing: 0.2em;
+}
+
+.dollarSign .green {
+    color: #00bd00;
+    text-shadow: -2px 2px #eaecee;
+}
+
+.dollarSign .grey {
+    color: gainsboro;
+}
+
+.stars img {
+    width: 40px;
+    margin: 0 2px;
+    text-shadow: -2px 2px #eaecee;
+}
+
+.stars .greyStar {
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+}
