@@ -56,12 +56,12 @@ var map,
                         
                         statusUpdate("Loading inpatient data");
                         setTimeout(handleHospitalsQualitiesLoaded, 900);
-                        get('data/inpatient.json', function(data) {
+                        get('data/inpatient.min.json', function(data) {
                             hcm.inpatientCosts = data;
                             
                             
                             statusUpdate("Loading outpatient data");
-                            get('data/outpatient.json', function(data) {
+                            get('data/outpatient.min.json', function(data) {
                                 hcm.outpatientCosts = data;
                                 
                                 

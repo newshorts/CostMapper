@@ -19,6 +19,7 @@
  * 7. /mdcAvgs --> mdcAvgs.json (depends on outpatient.json) (computes the national average for a specific mdc)
  * 8. /compareHospitalCosts --> hospitalsCosts.json (depends on hospitals.json, outpatient.json, inpatient.json, drgAvgs.json, mdcAvgs.json)
  * 9. /definitions --> output definitions into a json file for bot mdcs and drgs
+ * 10. /slipDownInpatient / Outpatient --> will trip the fat on these files so they arent so large
  * 
  * Output Data sets in different variations
  * /getInpatientAvgCost --> inpatientAvgCost.json (outputs a list of inpatient average cost per hospital)
@@ -244,11 +245,53 @@ app.get('/definitions', function(req, res) {
     });
 });
 
+app.get('/slimDownInpatient', function(req, res) {
+    slimDownPatient('drg_definition', 'covered_charges', './data/inpatient.json', function(list) {
+        saveFile('data/inpatient.min.json', list, res);
+    });
+});
+
+app.get('/slimDownOutpatient', function(req, res) {
+    slimDownPatient('apc_definition', 'submitted_charges', './data/outpatient.json', function(list) {
+        saveFile('data/outpatient.min.json', list, res);
+    });
+});
+
 app.listen(app.get('port'), function() {
     console.log("Node app is running at localhost:" + app.get('port'));
 });
 
 // helpers
+function slimDownPatient(defKey, costKey, filename, callback) {
+    var hospitals = require(filename);
+    var min = {};
+    
+    for(var pid in hospitals) {
+        for(var code in hospitals[pid]) {
+            
+            var obj = {};
+            
+            if(hospitals[pid][code].hasOwnProperty(costKey)) {
+                obj[costKey] = hospitals[pid][code][costKey];
+            }
+            
+            if(hospitals[pid][code].hasOwnProperty(defKey)) {
+                obj[defKey] = hospitals[pid][code][defKey];
+            }
+            
+            if(min.hasOwnProperty(pid)) {
+                min[pid][code] = obj;
+            } else {
+                min[pid] = {};
+                min[pid][code] = obj;
+            }
+        }
+    }
+    
+    callback(min);
+    
+}
+
 function outputDefinitions(callback) {
     var inpatient = require('./data/inpatient.json');
     var outpatient = require('./data/outpatient.json');
