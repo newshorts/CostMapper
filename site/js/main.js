@@ -4,6 +4,8 @@
  * and open the template in the editor.
  */
 
+/* global ga, TweenLite, Power1, google, parseInt, HIGH_INPATIENT_STDEV, LOW_INPATIENT_STDEV, HIGH_OUTPATIENT_STDEV, LOW_OUTPATIENT_STDEV */
+
 function HealthCareCostMapper() {
     this.hospitals = [];
     this.hospitalsCosts = {};
@@ -71,11 +73,10 @@ var map,
                     });
                 });
             });
-            
         });
         
         function callCallback() {
-            if(typeof callback != 'undefined' && hospitalsShowingOnMap) {
+            if(typeof callback !== 'undefined' && hospitalsShowingOnMap) {
                 if(ga) {
                     ga('send', 'event', 'jsonDataLoading', 'loading', 'success');
                 }
@@ -142,7 +143,7 @@ var map,
         map.panTo(this.getPosition());
         
         // start and black and fade to white
-        TweenLite.from(oc, 0.25, {
+        TweenLite.from(oc, 1.25, {
             backgroundColor: '#c8c8c8',
             ease: Power1.easeOut
         });
@@ -341,7 +342,7 @@ var map,
     
     // template helpers
     function getAddressTemplate(hospital) {
-        var addressStr = ''
+        var addressStr = '';
         if(hospital.hasOwnProperty('address')) {
             addressStr += hospital.address;
         }

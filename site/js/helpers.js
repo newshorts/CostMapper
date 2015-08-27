@@ -7,7 +7,7 @@
 
 // removes code and some unwanted strings
 function formatDef(def) {
-    return def.substr(def.search(/[a-zA-Z ]+/)).replace('- ', '');
+    return def.substr(def.search(/[a-zA-Z ]+/)).replace('- ', '').replace(',', ', ');
 }
 
 function formatMoney(num) {
